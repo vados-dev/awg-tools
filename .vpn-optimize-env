@@ -2,7 +2,7 @@
 cur_dir=${SELF%/*}
 dir_name=${cur_dir##*/}
 sysctl_dir="${cur_dir}/sysctl.d"
-MY_ROOT=${cur_dir};
+ME_ROOT=${cur_dir};
 me_ext=$(basename "$0")
 me="${me_ext%.*}"
 app_file=${me_ext};
@@ -12,7 +12,7 @@ version="0.0.1"
 
 # Log
 SAVE_LOG=true
-DEFAULT_LOG="$MY_ROOT/logs/$app_name.log"
+DEFAULT_LOG="$ME_ROOT/logs/$app_name.log"
 
 # For colors
 COLS_NUM=78

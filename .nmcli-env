@@ -2,7 +2,7 @@
 #SELF="$(readlink -f "${BASH_SOURCE[0]}")"
 cur_dir=${SELF%/*}
 dir_name=${cur_dir##*/}
-NMCLI_ROOT=${cur_dir};
+ME_ROOT=${cur_dir};
 dir_name="${PWD##*/}";
 script_name_ext="${0##*/}";
 script_name="${script_name_ext%.*}";
@@ -13,7 +13,7 @@ version="0.0.1"
 
 # Log
 SAVE_LOG=true
-DEFAULT_LOG="$NMCLI_ROOT/logs/$app_name.log"
+DEFAULT_LOG="$ME_ROOT/logs/$app_name.log"
 
 # For colors
 COLS_NUM=78
