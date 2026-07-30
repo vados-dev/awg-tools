@@ -29,58 +29,45 @@ SELF="$(readlink -f "${BASH_SOURCE[0]}")"
 . ${SELF%/*}/.${dir_name}-output
 . ${SELF%/*}/.${dir_name}-func
 
-check_root() {
-    if [ $(id -u) -ne 0 ]; then
-        die "This script must be run as root."
-    fi
-}
-check_virt() {
-    if grep "container=" /proc/1/environ > /dev/null 2>&1; then
-        die "Containers is not supported."
-    fi
-}
-
-check_os() {
-    . "/etc/os-release"
-    os_id="$ID"
-    os_ver="$VERSION_ID"
-}
-
+# --> Функции "system_check" <--
+check_root() { if [ $(id -u) -ne 0 ]; then die "This script must be run as root."; fi }
+check_virt() { if grep "container=" /proc/1/environ > /dev/null 2>&1; then die "Containers is not supported."; fi }
+check_os() { . "/etc/os-release"; os_id="$ID"; os_ver="$VERSION_ID"; }
 validate_os_ver() {
     case "$os_id" in
         "debian")
             if [ "$os_ver" -lt 12 ]; then
-                echo "Your version of Debian ${os_ver} is not supported. Please use Debian 12 or later."
-                exit 1
+                die "Your version of Debian ${os_ver} is not supported. Please use Debian 12 or later."
             fi
             ;;
         "almalinux")
             MAJOR_VERSION="${os_ver%%.*}"
             if [ "$MAJOR_VERSION" -lt 9 ]; then
-                echo "Your version of Alma ${os_ver} is not supported. Please use Alma 9 or later."
-                exit 1
+                die "Your version of Alma ${os_ver} is not supported. Please use Alma 9 or later."
             fi
             ;;
         "rocky")
             MAJOR_VERSION="${os_ver%%.*}"
             if [ "$MAJOR_VERSION" -lt 9 ]; then
-                echo "Your version of Rocky ${os_ver} is not supported. Please use Rocky 9 or later."
-                exit 1
+                die "Your version of Rocky ${os_ver} is not supported. Please use Rocky 9 or later."
             fi
             ;;
         "centos")
             MAJOR_VERSION="${os_ver%%.*}"
             if [ "$MAJOR_VERSION" -lt 9 ]; then
-                echo "Your version of CentOS ${os_ver} is not supported. Please use CentOS 9 or later."
-                exit 1
+                die "Your version of CentOS ${os_ver} is not supported. Please use CentOS 9 or later."
             fi
             ;;
         *)
-            echo "Your Linux distribution is not supported."
-            exit 1
+            die "Your Linux distribution is not supported."
             ;;
     esac
 }
+
+check_root
+check_virt
+check_os
+validate_os_ver
 
 # --> ПРОВЕРКА ROOT <--
 # - все операции требуют root -
@@ -89,7 +76,3 @@ if [[ "$EUID" -ne 0 ]]; then
     exit 1
 fi
 
-check_root
-check_virt
-check_os
-validate_os_ver

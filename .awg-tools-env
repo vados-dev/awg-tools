@@ -11,8 +11,10 @@ version="0.0.1"
 code_name=$app_name
 pr_name="AWG Tools"
 pr_descr="Менеджер AWG стека: WG/AWG VPN"
+pr_phrase="Хорошего дня!"
 pr_owner="vados-dev"
 repo_name=${dir_name}
+
 
 # Log
 DEFAULT_LOG="$ME_ROOT/logs/$app_name.log"
@@ -34,6 +36,9 @@ NMCLI_ALLOWED_IPS="0.0.0.0/0"
 
 # vpn-optimize-env
 AWG_OPTIMIZE_SYSCTL_DIR="${cur_dir}/sysctl.d"
+
+# install-env
+AWG_MODULE_SETUP_DIR="/usr/src/amnezia/kernel_module/setup"
 
 # firewalld-env
 # Альяс команды firewall-cmd

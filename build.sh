@@ -26,6 +26,8 @@ FILES=(
     "02_utils.sh"
     "03_nmcli.sh"
     "04_fwcmd.sh"
+    "05_diag.sh"
+    "06_install.sh"
     "main.sh"
     "99_entry.sh"
 )

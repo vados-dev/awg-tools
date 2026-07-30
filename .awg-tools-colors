@@ -19,16 +19,16 @@
 ################################################################################
 _c() { [ $# == 0 ] && printf "\e[0m" || printf "$1" | sed 's/\(.\)/\1;/g;s/\([SDIUFNHT]\)/2\1/g;s/\([KRGYBMCW]\)/3\1/g;s/\([krgybmcw]\)/4\1/g;y/SDIUFNHTsdiufnhtKRGYBMCWkrgybmcw/12345789123457890123456701234567/;s/^\(.*\);$/\\e[\1m/g'; }
 
-nc=$(_c 0); bld=$(_c s); sma=$(_c d); und=$(_c u); strt=$(_c t);
-bnc=$(_c 0s);
+nc=$(echo -e $(_c 0)); bld=$(echo -e $(_c s)); sma=$(echo -e $(_c d)); und=$(echo -e $(_c u)); strt=$(echo -e $(_c t));
+bnc=$(echo -e $(_c 0)$(_c s));
 
 if tty >/dev/null 2>&-; then
     blk=$(_c K); red=$(_c R); grn=$(_c G); yel=$(_c Y); blu=$(_c Bkh); mag=$(_c Mkh); cy=$(_c Ckh); wh=$(_c Wkh);
     blkb=$(_c Wk); redb=$(_c Wrs); grnb=$(_c Gfn); yelb=$(_c Byf); blub=$(_c Wbs); magb=$(_c Wms); cyb=$(_c Cfn); whb=$(_c Kwf);
-    bblk=$(_c Ks); bred=$(_c Rs); bgrn=$(_c Gs); byel=$(_c Ys); bblu=$(_c Bks); bmag=$(_c Mks); bcy=$(_c Cks); bwh=$(_c Wks);
+    bblk=$(_c Ks); bred=$(_c Rs); bgrn=$(_c Gs); byel=$(_c sY); bblu=$(_c Bks); bmag=$(echo -e $(_c sM)); bcy=$(_c Cks); bwh=$(_c Wks);
     rev=$(tput rev); blink=$(_c f); neg=$(_c n);
     sym_ok=$(printf "${grn}%s${nc}" ✅); sym_err=$(printf "${red}%s${nc}" ❌); install=$(printf "${bnc}%s${nc}" 💿);
-    sym_info=$(printf "${bblu}%s${nc}" 📋);sym_warn=$(printf "${byel}%s${nc}" "⚠⚠"); sym_dbg=$(printf "${bwh}%s${nc}" 🔧); sym_star=$(printf "${byel}%s${nc}" ✨);
+    sym_info=$(printf "${bblu}%s${nc}" 📋);sym_warn=$(printf "${byel}%s${nc}" "⚠⚠"); sym_dbg=$(printf "${bwh}%s${nc}" 🔧); sym_star=$(echo -en "${byel}✨${nc}");
 else
     neg=''; blink=''; rev='';
     blk=''; red=''; grn=''; yel=''; blu=''; mag=''; cy=''; wh='';

@@ -1,3 +1,6 @@
+#SELF="$(readlink -f "${BASH_SOURCE[0]}")"
+#. ${SELF%/*}/.awg-tools-env
+#. ${SELF%/*}/.awg-tools-colors
 ######################
 ### Функции вывода ###
 ######################
@@ -34,6 +37,48 @@ print_section() {
     printf "   ${bmag}${dashes}${nc}\n";
 }
 
+
+
+################################
+### Функция заполнения строк ###
+################################
+#function get_terminal_rows { TERMINAL_ROWS=$(stty -a | awk '{for (i = 1; i < NF; i++) if ($i == "rows") {v = $(i+1); out = ""; for (j = 1; j <= length(v); j++) {c = substr(v, j, 1); if (c >= "0" && c <= "9") out = out c} print out; exit}}'); }
+toend=$(tput hpa $(tput cols))$(tput cub 6);
+#tocenter=$(tput hpa $(tput cols));
+TERM_COLS=$(tput cols)  # ширина
+TERM_ROWS=$(tput lines)  # высота
+CENTER_COL=$((TERM_COLS / 2))
+CENTER_ROW=$((TERM_ROWS / 2))
+# Перемещаем курсор в рассчитанную позицию
+ABS_CENTER=$(tput cup $CENTER_ROW $CENTER_COL);
+TOP_CENTER=$(tput hpa $CENTER_COL);
+
+align::left() {
+  local -i width=${1:?}
+  local -- str="${2:?}"
+  local clr_str="$2"
+  local -i length=$((${#str} > width ? width : ${#str}))
+  local -i pad_right=$((width - length))
+  printf "%s%*s" "${str:0:length}" ${pad_right} ""
+}
+align::right() {
+  local -i width=${1:?}
+  local -- str=${2:?}
+  local -i length=$((${#str} > width ? width : ${#str}))
+  local -i offset=$((${#str} - length))
+  local -i pad_left=$((width - length))
+  printf "%*s%s" "$pad_left" "" "${str:offset:length}"
+}
+align::center() {
+  local -i width=${1:?}
+  local -- str=${2:?}
+  local -i length=$((${#str} > width ? width : ${#str}))
+  local -i offset=$(((${#str} - length) / 2))
+  local -i pad_left=$(((width - length) / 2))
+  local -i pad_right=$((width - length - pad_left))
+  printf "%*s%s%*s" "$pad_left" "" "${str:offset:length}" "$pad_right" ""
+}
+
 stars=${byel}'✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨'${nc};
 line='##############################################################';
 dashes='───────────────────────────────────────────────────────────────────────────────'
@@ -55,45 +100,6 @@ print_dashes() {
     done
     printf "\n"
 }
-################################
-### Функция заполнения строк ###
-################################
-#function get_terminal_rows { TERMINAL_ROWS=$(stty -a | awk '{for (i = 1; i < NF; i++) if ($i == "rows") {v = $(i+1); out = ""; for (j = 1; j <= length(v); j++) {c = substr(v, j, 1); if (c >= "0" && c <= "9") out = out c} print out; exit}}'); }
-toend=$(tput hpa $(tput cols))$(tput cub 6);
-#tocenter=$(tput hpa $(tput cols));
-TERM_COLS=$(tput cols)  # ширина
-TERM_ROWS=$(tput lines)  # высота
-CENTER_COL=$((TERM_COLS / 2))
-CENTER_ROW=$((TERM_ROWS / 2))
-# Перемещаем курсор в рассчитанную позицию
-ABS_CENTER=$(tput cup $CENTER_ROW $CENTER_COL);
-TOP_CENTER=$(tput hpa $CENTER_COL);
-
-align::left() {
-  local -i width=${1:?}
-  local -- str="${2:?}"
-  local clr_str="$2"
-  local -i length=$((${#str} > width ? width : ${#str}))
-  local -i pad_right=$((width - length))
-  printf "%s%*s" "${str:0:length}" ${pad_right} ''
-}
-align::right() {
-  local -i width=${1:?}
-  local -- str=${2:?}
-  local -i length=$((${#str} > width ? width : ${#str}))
-  local -i offset=$((${#str} - length))
-  local -i pad_left=$((width - length))
-  printf "%*s%s" "$pad_left" '' "${str:offset:length}"
-}
-align::center() {
-  local -i width=${1:?}
-  local -- str=${2:?}
-  local -i length=$((${#str} > width ? width : ${#str}))
-  local -i offset=$(((${#str} - length) / 2))
-  local -i pad_left=$(((width - length) / 2))
-  local -i pad_right=$((width - length - pad_left))
-  printf "%*s%s%*s" "$pad_left" '' "${str:offset:length}" "$pad_right" ''
-}
 
 print_banner() {
     local title="$1"
@@ -112,21 +118,21 @@ printf "  ${bmag} └───────────────────�
 awg_header() {
 clear
 printf "\n";
-printf "${bnc}╔══════════════════════════════════════════════════════════════════════════════╗\n";
-printf "${bnc}║                                                                              ║\n";
+printf "${bnc}╔%s╗${nc}\n" "$(align::left $((${COLS_NUM})) "$equals")"
+printf "${bnc}║%s║${nc}\n" "$(align::center $COLS_NUM " ")"
 printf "${bnc}║${bmag}   █████╗ ███╗   ███╗███╗   ██╗███████╗███████╗██╗ █████╗ ██╗    ██╗ ██████╗  ${bnc}║\n";
 printf "${bnc}║${bmag}  ██╔══██╗████╗ ████║████╗  ██║╚══███╔╝██╔════╝██║██╔══██╗██║    ██║██╔════╝  ${bnc}║\n";
 printf "${bnc}║${bmag}  ███████║██╔████╔██║██╔██╗ ██║  ███╔╝ █████╗  ██║███████║██║ █╗ ██║██║  ███╗ ${bnc}║\n";
 printf "${bnc}║${bmag}  ██╔══██║██║╚██╔╝██║██║╚██╗██║ ███╔╝  ██╔══╝  ██║██╔══██║██║███╗██║██║   ██║ ${bnc}║\n";
 printf "${bnc}║${bmag}  ██║  ██║██║ ╚═╝ ██║██║ ╚████║███████╗███████╗██║██║  ██║╚███╔███╔╝╚██████╔╝ ${bnc}║\n";
 printf "${bnc}║${bmag}  ╚═╝  ╚═╝╚═╝     ╚═╝╚═╝  ╚═══╝╚══════╝╚══════╝╚═╝╚═╝  ╚═╝ ╚══╝╚══╝  ╚═════╝  ${bnc}║\n";
-printf "${bnc}║                                                                              ║\n";
-printf "${bnc}║                           %s                              ║\n" "$app_name v$version";
-printf "${bnc}║                  %s                   ║\n" "$pr_descr";
-printf "${bnc}║                                                                              ║\n";
-printf "${bnc}║                                                                              ║\n";
-printf "${bnc}║                              ${sym_star}${mag} Хорошего дня! ${sym_star}${bnc}                             ║\n";
-printf "${bnc}╚══════════════════════════════════════════════════════════════════════════════╝${nc}\n";
+printf "${bnc}║%s║${nc}\n" "$(align::center $COLS_NUM " ")"
+printf "${bnc}║%s║${nc}\n" "$(align::center $COLS_NUM "$pr_name v$version")"
+printf "${bnc}║%s║${nc}\n" "$(align::center $COLS_NUM "$pr_descr")"
+printf "${bnc}║%s║${nc}\n" "$(align::center $COLS_NUM " ")"
+printf "${bnc}║%s║${nc}\n" "$(align::center $COLS_NUM " ")"
+printf "${bld}║%s${bnc}║${nc}\n" "$(align::center $((${COLS_NUM} + 31)) "  ${sym_star} ${bmag}${pr_phrase}${nc} ${sym_star}  ")"
+printf "${bnc}╚%s╝${nc}\n" "$(align::left $((${COLS_NUM})) "$equals")"
 
 }
 
