@@ -1,0 +1,272 @@
+###########################
+### Функции логирования ###
+###########################
+log_msg() {
+    local type="$1";local msg="$2";
+    local ts=$(date '+%b %d %T');
+    local entry="[$ts] $type: $msg";
+    case "$type" in
+        Инфо)  printstr "${bblue}$type: ${bnc}$msg" "$sym_info" ;;
+        Ok)    printstr "${bgrn}$type: ${bnc}$msg" "$sym_ok" ;;
+        Зацени)  printstr "${byel}$type: ${bnc}$msg" "$sym_warn" ;;
+        Ошибка) printstr "${bred}$type: ${bnc}$msg" "$sym_err" >&2 ;;
+        Отладка) printstr "${bwh}$type: ${bnc}$msg" "$sym_dbg" >&2 ;;
+        *) app_title "Error" "$sym_err" ;;
+    esac
+
+    if [[ "${DEFAULT_LOG}" != "" ]] && [[ "${SAVE_LOG}" == true ]];then
+        local log="${DEFAULT_LOG}";
+        if ! mkdir -p "$(dirname "${log}")" || ! echo ${entry} >> "${log}"; then
+            printstr "Ошибка записи лога '${log}'. ${bred}ERROR:${nc} " "$entry" "$sym_err";
+            exit 1;
+        fi
+    fi
+}
+
+###############################################
+### Функции определения внешнего интерфейса ###
+###############################################
+ifext="$(ip route show default | grep -oP 'dev \K\S+')";
+ipext="$(ip route show default | grep -oP 'via \K\S+')";
+
+#######################
+### Функции курсора ###
+#######################
+function cursor_move_up { printf '\033[%sA' "$1"; }
+function cursor_move_down { printf '\033[%sB' "$1"; }
+function cursor_move_left { printf '\033[%sD' "$1"; }
+function cursor_move_right { printf '\033[%sC' "$1"; }
+
+#####################
+### Функции ввода ###
+#####################
+#_def_autocomp() {
+#    local DEFAULT_VALUE="$1" QUESTION="$2" DEFAULT_VALUE_LENGTH="${#DEFAULT_VALUE}"
+#    local QUESTION_LENGTH="${#QUESTION}"
+#    cursor_move_up "1";
+#    cursor_move_right "$QUESTION_LENGTH";
+#    printf "$DEFAULT_VALUE";
+#    cursor_move_down "1";
+#    cursor_move_left $((DEFAULT_VALUE_LENGTH + QUESTION_LENGTH));
+#}
+#_user_input() {
+#    read -r USER_INPUT
+#    USER_INPUT="${USER_INPUT#"${USER_INPUT%%[![:space:]]*}"}"
+#    USER_INPUT="${USER_INPUT%"${USER_INPUT##*[![:space:]]}"}"
+#}
+
+_tty_reset() {
+    [[ -r /dev/tty ]] && stty sane -ixon -ixoff < /dev/tty 2>/dev/null || true
+}
+
+_read_line() {
+    local __prompt="$1" __varname="$2" __default="${3:-}"
+    local __input="" __ch="" __old_stty="" __esc_tail=""
+    if [[ -r /dev/tty && -w /dev/tty ]]; then
+        # Если основной вывод сейчас идёт через pipe/FIFO, даём tee допечатать предыдущую строку.
+        [[ ! -t 1 || ! -t 2 ]] && sleep 0.05
+        printf '%b' "$__prompt" > /dev/tty
+        __old_stty=$(stty -g < /dev/tty 2>/dev/null || true)
+        stty -echo -icanon min 1 time 0 < /dev/tty 2>/dev/null || true
+        while IFS= read -r -s -n 1 __ch < /dev/tty; do
+            case "$__ch" in
+                ""|$'\r'|$'\n')
+                    printf '\n' > /dev/tty
+                    break
+                    ;;
+                $'\177'|$'\b')
+                    if [[ -n "$__input" ]]; then
+                        __input="${__input%?}"
+                        printf '\b \b' > /dev/tty
+                    fi
+                    ;;
+                $'\003')
+                    [[ -n "$__old_stty" ]] && stty "$__old_stty" < /dev/tty 2>/dev/null || tty_reset
+                    printf '\n' > /dev/tty
+                    kill -INT $$
+                    return 130
+                    ;;
+                $'\004')
+                    printf '\n' > /dev/tty
+                    break
+                    ;;
+                $'\025')
+                    while [[ -n "$__input" ]]; do
+                        __input="${__input%?}"
+                        printf '\b \b' > /dev/tty
+                    done
+                    ;;
+                $'\033')
+                    # Игнор ESC/стрелок, чтобы в меню не попадали escape-последовательности.
+                    read -r -s -n 2 -t 0.01 __esc_tail < /dev/tty 2>/dev/null || true
+                    ;;
+                *)
+                    __input+="$__ch"
+                    printf '%s' "$__ch" > /dev/tty
+                    ;;
+            esac
+        done
+
+        [[ -n "$__old_stty" ]] && stty "$__old_stty" < /dev/tty 2>/dev/null || _tty_reset
+    else
+        _tty_reset
+        printf '%b' "$__prompt" >&2
+        IFS= read -r __input || __input=""
+    fi
+
+    [[ -z "$__input" && -n "$__default" ]] && __input="$__default"
+    printf -v "$__varname" '%s' "$__input"
+}
+#    _def_autocomp "$__input" "$__prompt"
+
+_read_choice() {
+    _read_line "\n   ${bnc} Выбор: " "$1"
+}
+
+ask() {
+    local prompt="$1" default="$2" varname="$3" p
+    if [[ -n "$default" ]]; then
+        p=$(printf '  %b%s%b [%s]: ' "${bnc}" "$prompt" "${nc}" "$default")
+    else
+        p=$(printf '  %b%s%b: ' "${bnc}" "$prompt" "${nc}")
+    fi
+    _read_line "$p" "$varname" "$default"
+}
+
+ask_yn() {
+    local prompt="$1" default="$2" varname="$3" value="" p
+
+    while true; do
+        if [[ "$default" == "y" ]]; then
+            p=$(printf '  %b%s%b [Y/n]: ' "${bnc}" "$prompt" "${nc}")
+        else
+            p=$(printf '  %b%s%b [y/N]: ' "${bnc}" "$prompt" "${nc}")
+        fi
+        _read_line "$p" value "$default"
+        case "${value,,}" in
+            y|yes) printf -v "$varname" 'yes'; return ;;
+            n|no)  printf -v "$varname" 'no';  return ;;
+            *) print_warn "Введите y или n" ;;
+        esac
+    done
+}
+
+# - usage: ask_raw "Текст: " varname [default] -
+ask_raw() {
+    local prompt="$1" varname="$2" default="${3:-}"
+    _read_line "$prompt" "$varname" "$default"
+}
+menu_pause() { echo ""; _read_line "  ${bnc}Нажми Enter для возврата в меню...${nc}" _; }
+########################
+### Сетевые проверки ###
+########################
+function _ping {
+if [[ "$1" != "" ]];then
+    url="$1";
+    index=1;
+    ! command -v grep "http" | echo "$url" >/dev/null 2>&1; hostname="${url}" || hostname=$(echo "$url" | awk -F/ '{print $3}')
+    rtt=$(ping -c 1 -W 1 "$hostname" 2>/dev/null | grep 'time=' | awk -F'time=' '{print $2}' | awk '{print $1}');
+    rtt=${rtt//.*/};
+    printf " [%i]                  %sms %s\n" "$index" "$rtt" "$url";
+else
+    echo "Нужен адрес!"
+fi
+}
+ipcheck() {
+    printf "%s\n" "$(curl --connect-timeout 1 -s ipinfo.io | jq -C '. | {ip, hostname, city, region, country, timezone, org}' | awk -F'{' '{print $1}' | awk -F'}' '{print $1}' | awk -F',' '{print $1}')"
+    return 1
+#    printf "%s" "$_exec"
+}
+ip6check() { curl --connect-timeout 1 v6.ipinfo.io; }
+###################
+### Проверка IP ###
+###################
+validate_ipv4() {
+    VALIDATE_IPV4="$1"
+    case "$VALIDATE_IPV4" in
+        *.*.*.*.*) return 1 ;;
+    esac
+    IFS="."
+    AWG_VALIDATE_IPV4_PARTS_COUNT="0"
+    for PART in $VALIDATE_IPV4; do
+        AWG_VALIDATE_IPV4_PARTS_COUNT=$((AWG_VALIDATE_IPV4_PARTS_COUNT + 1))
+    done
+    if [ "$AWG_VALIDATE_IPV4_PARTS_COUNT" != "4" ]; then
+        unset IFS
+        return 1
+    fi
+    for PART in $VALIDATE_IPV4; do
+        case "$PART" in
+            [0-9] | [0-9][0-9] | [0-9][0-9][0-9]) ;;
+            *)
+                unset IFS
+                return 1
+                ;;
+        esac
+        if [ "$PART" -lt 0 ] || [ "$PART" -gt 255 ]; then
+            unset IFS
+            return 1
+        fi
+    done
+    unset IFS
+    return 0
+}
+validate_ipv6() {
+    VALIDATE_IPV6="$1"
+    case "$VALIDATE_IPV6" in
+        *.*) return 1 ;;
+        *:::*) return 1 ;;
+        *::*::*) return 1 ;;
+    esac
+    AWG_VALIDATE_IPV6_LEFT_SIDE=${VALIDATE_IPV6%%::*}
+    AWG_VALIDATE_IPV6_RIGHT_SIDE=${VALIDATE_IPV6#*::}
+    if [ "$AWG_VALIDATE_IPV6_LEFT_SIDE" = "$AWG_VALIDATE_IPV6_RIGHT_SIDE" ]; then
+        AWG_VALIDATE_IPV6_RIGHT_SIDE=""
+    fi
+    IFS=":"
+    AWG_VALIDATE_IPV6_LEFT_SIDE_PARTS_COUNT="0"
+    for PART in $AWG_VALIDATE_IPV6_LEFT_SIDE; do
+        AWG_VALIDATE_IPV6_LEFT_SIDE_PARTS_COUNT=$((AWG_VALIDATE_IPV6_LEFT_SIDE_PARTS_COUNT + 1))
+    done
+    AWG_VALIDATE_IPV6_RIGHT_SIDE_PARTS_COUNT="0"
+    for PART in $AWG_VALIDATE_IPV6_RIGHT_SIDE; do
+        AWG_VALIDATE_IPV6_RIGHT_SIDE_PARTS_COUNT=$((AWG_VALIDATE_IPV6_RIGHT_SIDE_PARTS_COUNT + 1))
+    done
+    AWG_VALIDATE_IPV6_PARTS_SUM=$((AWG_VALIDATE_IPV6_LEFT_SIDE_PARTS_COUNT + AWG_VALIDATE_IPV6_RIGHT_SIDE_PARTS_COUNT))
+    case "$VALIDATE_IPV6" in
+        *::*)
+            if [ "$AWG_VALIDATE_IPV6_PARTS_SUM" -gt 7 ]; then
+                unset IFS
+                return 1
+            fi
+            ;;
+        *)
+            if [ "$AWG_VALIDATE_IPV6_PARTS_SUM" != "8" ]; then
+                unset IFS
+                return 1
+            fi
+            ;;
+    esac
+    if [ -n "$AWG_VALIDATE_IPV6_LEFT_SIDE" ]; then
+        for PART in $AWG_VALIDATE_IPV6_LEFT_SIDE; do
+            case "$PART" in
+                [0-9a-fA-F] | [0-9a-fA-F][0-9a-fA-F] | [0-9a-fA-F][0-9a-fA-F][0-9a-fA-F] | [0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]) ;;
+                *)
+                    unset IFS
+                    return 1 ;;
+            esac
+        done
+    fi
+    if [ -n "$AWG_VALIDATE_IPV6_RIGHT_SIDE" ]; then
+        for PART in $AWG_VALIDATE_IPV6_RIGHT_SIDE; do
+            case "$PART" in
+                [0-9a-fA-F] | [0-9a-fA-F][0-9a-fA-F] | [0-9a-fA-F][0-9a-fA-F][0-9a-fA-F] | [0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]) ;;
+                *)
+                    unset IFS
+                    return 1 ;;
+            esac
+        done
+    fi
+    unset IFS
+    return 0
+}

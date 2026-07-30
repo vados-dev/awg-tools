@@ -1,0 +1,56 @@
+
+SELF="$(readlink -f "${BASH_SOURCE[0]}")"
+cur_dir=${SELF%/*}
+dir_name=${cur_dir##*/}
+ME_ROOT=${cur_dir};
+me_ext=$(basename "$0")
+me="${me_ext%.*}"
+app_file=${me_ext};
+app_name=${dir_name:-"awg-tools"};
+version="0.0.1"
+code_name=$app_name
+pr_name="AWG Tools"
+pr_descr="Менеджер AWG стека: WG/AWG VPN"
+pr_owner="vados-dev"
+repo_name=${dir_name}
+
+# Log
+DEFAULT_LOG="$ME_ROOT/logs/$app_name.log"
+SAVE_LOG=true
+
+# For colors
+COLS_NUM=78
+NO_COLOR=false;
+export WG_COLOR_MODE=always
+export AWG_COLOR_MODE=always
+
+# nmcli-env
+NMCLI_CONF_DIR="/etc/amnezia/amneziawg/"
+NMCLI_DEF_NAME="awg2vds"
+NMCLI_DEF_CONF=${CONF_DIR}${1:-$DEF_NAME}.conf;
+NMCLI_ENDPOINT="146.120.64.211"
+NMCLI_ENDPOINT_PORT="51820"
+NMCLI_ALLOWED_IPS="0.0.0.0/0"
+
+# vpn-optimize-env
+AWG_OPTIMIZE_SYSCTL_DIR="${cur_dir}/sysctl.d"
+
+# firewalld-env
+# Альяс команды firewall-cmd
+#if [ "$fwcmd" = "" ] || [ ! "$fwcmd" ] || [ "$fwcmd" != $(which firewall-cmd) ]; then export fwcmd=$(which firewall-cmd); fi
+fwcmd=fw_fwcmd
+# Ещё альясы
+fwreload="${fwcmd} -rl"; fwperm="${fwcmd} -pmt"
+
+opt1="$1"; opt2="$2"; opt3="$3"; opt4="$4";
+# defs
+perm="--permanent"
+permap="--permanent"
+defzone="--zone=public"
+#zoneap="--zone=trusted"
+#ifap="ap0"
+#ap_iptsubn="10.3.141.0/24";
+#noif="lo $ifap";
+# action
+#actn="add";
+#if [ "$opt2" == "delete" ] || [ "$opt2" == "remove" ]; then actn="remove"; fi
