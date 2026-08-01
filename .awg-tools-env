@@ -28,7 +28,7 @@ export AWG_COLOR_MODE=always
 
 # nmcli-env
 NMCLI_CONF_DIR="/etc/amnezia/amneziawg/"
-NMCLI_DEF_NAME="awg2all"
+NMCLI_DEF_NAME="awg2vds"
 NMCLI_DEF_CONF=${NMCLI_CONF_DIR}${1:-$NMCLI_DEF_NAME}.conf;
 NMCLI_ENDPOINT="146.120.64.211"
 NMCLI_ENDPOINT_PORT="51820"

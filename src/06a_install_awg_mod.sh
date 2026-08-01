@@ -41,15 +41,40 @@ mod_awg_install() {
     if ! dnf list installed "dkms" 2>/dev/null | grep -q "Installed Packages"; then
         install_deps
     fi
+    local gitUrl="$1"
     rm -rf ./setup
-    git clone https://github.com/vados-dev/amneziawg-linux-kernel-module.git ${AWG_MODULE_SETUP_DIR}
+    git clone ${gitUrl} ${AWG_MODULE_SETUP_DIR}
+#
     cd ${AWG_MODULE_SETUP_DIR}/src && \
     sudo make dkms-install && \
     sudo dkms install "amneziawg/$(make print-version)"
     add_awg_to_modules
     rm -rf ${AWG_MODULE_SETUP_DIR}
 }
+mod_awg_get_url() {
+    local vadUrl="https://github.com/vados-dev/amneziawg-linux-kernel-module.git"
+    local amnUrl="https://github.com/amnezia-vpn/amneziawg-linux-kernel-module.git"
+    local advUrl="https://github.com/AdvancedWG/amneziawg-linux-kernel-module-awg.git"
 
+    while true; do
+        echo -e "${bgrn}1${bnc}) vados-dev"
+        echo -e "${bnc}2${bnc}) amnezia-vpn"
+        echo -e "${bnc}3${bnc}) advancedWG"
+        echo -e ""
+        echo -e "${byel}0${bnc}) Назад"
+        echo -e "${magb}[ Enter ]${bnc} Назад"
+        echo ""
+        eli_read_choice choice
+
+        case "$choice" in
+            1) mod_awg_install "$vadUrl" && return 0 || print_warn "Ошибка при настройке" ;;
+            2) mod_awg_install "$amnUrl" && return 0 || print_warn "Ошибка при показе статуса" ;;
+            3) mod_awg_install "$advUrl" && return 0 || print_warn "Ошибка при тесте" ;;
+            0) return 0 ;;
+            *) print_warn "Введите число от 0 до 4" ;;
+        esac
+    done
+}
 mod_awg_remove() {
     sudo dkms remove "amneziawg/$(dkms status | grep amneziawg | awk -F'[/, ]+' '{print $2}' | head -1)" --all
     del_awg_from_modules

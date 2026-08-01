@@ -1,6 +1,6 @@
 # --> Функции подменю "NetworkManager" <--
 nmcli_show_conn() {
-mn_show_conn=$(nmcli -c yes con show | awk '{print "    " $0}')
+nm_show_conn=$(nmcli -c yes con show | awk '{print "    " $0}')
 printf "\n    List connections:${nc}\n%s${nc}\n" "${nm_show_conn}";
 }
 nmcli_show_devices() {
