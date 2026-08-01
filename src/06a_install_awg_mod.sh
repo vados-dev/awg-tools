@@ -1,4 +1,4 @@
-# --> Функции подменю "Установка" <--
+# --> Функции подменю "Установка модуля ядра amneziawg" <--
 
 install_deps() {
     dnf update -y || true
@@ -66,27 +66,6 @@ menu_install_awg_mod() {
     declare mItems=("Установка модуля amneziawg" "Переустановка/обновление модуля amneziawg" "Удаление модуля amneziawg" "Добавить в автозагрузку модуль amneziawg" "Удалить из автозагрузки модуль amneziawg" "Добавить в автозагрузку модуль wireguard" "Удалить из автозагрузки модуль wireguard")
     declare mActions=("mod_awg_install" "mod_awg_reinstall" "mod_awg_remove" "add_awg_to_modules" "del_awg_from_modules" "add_wg_to_modules" "del_wg_from_modules")
     declare mTitle="Установка модуля ядра amneziawg"
-    declare mDescr=""
-    declare mType="section"
-    show_menu
-}
-
-# --> МЕНЮ: Установка вспомогательных утилит <--
-menu_install_utils() {
-    declare mItems=("Установка модуля amneziawg" "Переустановка/обновление модуля amneziawg" "Удаление модуля amneziawg" "Добавить в автозагрузку модуль amneziawg" "Удалить из автозагрузки модуль amneziawg" "Добавить в автозагрузку модуль wireguard" "Удалить из автозагрузки модуль wireguard")
-    declare mActions=("mod_awg_install" "mod_awg_reinstall" "mod_awg_remove" "add_awg_to_modules" "del_awg_from_modules" "add_wg_to_modules" "del_wg_from_modules")
-    declare mTitle="Установка вспомогательных утилит"
-    declare mDescr=""
-    declare mType="section"
-    show_menu
-}
-
-
-# --> МЕНЮ: Установка <--
-menu_install() {
-    declare mItems=("Установка модуля ядра amneziawg" "Установка вспомогательных утилит")
-    declare mActions=("menu_install_awg_mod" "menu_install_utils")
-    declare mTitle="Установка"
     declare mDescr=""
     declare mType="section"
     show_menu
