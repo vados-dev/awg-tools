@@ -24,7 +24,7 @@ bnc=$(echo -e $(_c 0)$(_c s));
 
 if tty >/dev/null 2>&-; then
     blk=$(_c K); red=$(_c R); grn=$(_c G); yel=$(_c Y); blu=$(_c Bkh); mag=$(_c Mkh); cy=$(_c Ckh); wh=$(_c Wkh);
-    blkb=$(_c Wk); redb=$(_c Wrs); grnb=$(_c Gfn); yelb=$(_c Byf); blub=$(_c Wbs); magb=$(_c Wms); cyb=$(_c Cfn); whb=$(_c Kwf);
+    blkb=$(_c Wk); redb=$(_c Wrs); grnb=$(_c Gfn); yelb=$(_c Byf); blub=$(_c Wbs); magb=$(_c sWm); cyb=$(_c Cfn); whb=$(_c Kwf);
     bblk=$(_c Ks); bred=$(_c Rs); bgrn=$(_c Gs); byel=$(_c sY); bblu=$(_c Bks); bmag=$(echo -e $(_c sM)); bcy=$(_c Cks); bwh=$(_c Wks);
     rev=$(tput rev); blink=$(_c f); neg=$(_c n);
     sym_ok=$(printf "${grn}%s${nc}" ✅); sym_err=$(printf "${red}%s${nc}" ❌); install=$(printf "${bnc}%s${nc}" 💿);

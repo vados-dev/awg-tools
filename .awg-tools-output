@@ -1,6 +1,19 @@
 #SELF="$(readlink -f "${BASH_SOURCE[0]}")"
 #. ${SELF%/*}/.awg-tools-env
 #. ${SELF%/*}/.awg-tools-colors
+
+################################
+### Функции контроля курсора ###
+################################
+ESC=$( printf "\033")
+cursor_blink_on()   { printf "$ESC[?25h"; }
+cursor_blink_off()  { printf "$ESC[?25l"; }
+cursor_to()         { printf "$ESC[$1;${2:-1}H"; }
+print_inactive()    { printf "$2   $1 "; }
+print_active()      { printf "$2  $ESC[7m $1 $ESC[27m"; }
+get_cursor_row()    { IFS=';' read -sdR -p $'\E[6n' ROW COL; echo ${ROW#*[}; }
+get_cursor_col()    { IFS=';' read -sdR -p $'\E[6n' ROW COL; echo ${COL#*[}; }
+
 ######################
 ### Функции вывода ###
 ######################
@@ -37,8 +50,6 @@ print_section() {
     printf "   ${bmag}${dashes}${nc}\n";
 }
 
-
-
 ################################
 ### Функция заполнения строк ###
 ################################
@@ -56,7 +67,7 @@ TOP_CENTER=$(tput hpa $CENTER_COL);
 align::left() {
   local -i width=${1:?}
   local -- str="${2:?}"
-  local clr_str="$2"
+#  local clr_str="$2"
   local -i length=$((${#str} > width ? width : ${#str}))
   local -i pad_right=$((width - length))
   printf "%s%*s" "${str:0:length}" ${pad_right} ""
@@ -67,7 +78,7 @@ align::right() {
   local -i length=$((${#str} > width ? width : ${#str}))
   local -i offset=$((${#str} - length))
   local -i pad_left=$((width - length))
-  printf "%*s%s" "$pad_left" "" "${str:offset:length}"
+  printf "%*s%s" $pad_left "" "${str:offset:length}"
 }
 align::center() {
   local -i width=${1:?}
@@ -76,7 +87,7 @@ align::center() {
   local -i offset=$(((${#str} - length) / 2))
   local -i pad_left=$(((width - length) / 2))
   local -i pad_right=$((width - length - pad_left))
-  printf "%*s%s%*s" "$pad_left" "" "${str:offset:length}" "$pad_right" ""
+  printf "%*s%s%*s" $pad_left "" "${str:offset:length}" $pad_right ""
 }
 
 stars=${byel}'✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨'${nc};
@@ -102,23 +113,39 @@ print_dashes() {
 }
 
 print_banner() {
-    local title="$1"
-    local desc="$2"
-printf "  ${bmag} ┌──────────────────────────────────────────────────────────────────────────────${nc}\n";
-printf "  ${bmag} │   ${sym_star}${bnc}   $title   ${sym_star}                                   ${nc}\n";
-printf "  ${bmag} └──────────────────────────────────────────────────────────────────────────────${nc}\n";
+    local title="${1:-$mTitle}" desc="$2"
+    printf "${bmag}┌──────────────────────────────────────────────────────────────────────────────${nc}\n";
+    printf "${bmag}│   ${sym_star}${bnc}   $title   ${sym_star}                                   ${nc}\n";
+    printf "${bmag}└──────────────────────────────────────────────────────────────────────────────${nc}\n";
     if [[ -n "$desc" ]]; then
         printf "\n  ${bnc} %s${nc}\n" " ${desc//$'\n'/$'\n'  }"
+        printf "${nc}${bmag}%s\n${nc}" "$dashes"
     fi
-    printf "${nc}${bmag}%s\n${bnc}" "    $dashes"
-    printf "${nc}"
-    printf -v MENUSTR "Меню раздела ${title}:"
+}
+
+show_window_head() {
+#       cursor_to $(( $LINES - 2 ))
+#    printf "_%.s" $(seq $TERM_COLS)
+#    local _var_str="│${blub} select : key ⎵[space] | (un)select all : key ([n])[a] | move : arrow up/down/left/right or keys k/j/l/h | validation : [enter]"
+    local _str="$(echo -en "${und}${magb}  ${mTitle}  ${bnc}${und}│${blub} select : key ⎵[space] ${bnc}${und}│${blub} (un)select all : key ([n])[a] ${bnc}${und}│${blub} move : arrow up/down/left/right or keys k/j/l/h ${bnc}${und}│${blub} validation : [enter]" | column -t -s '|')"
+    local top_str=$(align::left $(($( tput cols ) + 102)) "$_str")
+
+
+#    local str_len=$(($( tput cols ) - ${#_top_str}))
+#    local str_len1=$((${TERM_COLS} - ${#_var_str}))
+#    echo ${TERM_COLS}
+#    echo $section_len
+#    echo $str_len1
+
+    printf "%s" "${top_str}"
 }
 
 awg_header() {
 clear
-printf "\n";
-printf "${bnc}╔%s╗${nc}\n" "$(align::left $((${COLS_NUM})) "$equals")"
+#cursor_to 0 0
+show_window_head
+printf "\n\n";
+printf "${bnc}╔%s╗${nc}\n" "$(align::center $((${COLS_NUM})) "$equals")"
 printf "${bnc}║%s║${nc}\n" "$(align::center $COLS_NUM " ")"
 printf "${bnc}║${bmag}   █████╗ ███╗   ███╗███╗   ██╗███████╗███████╗██╗ █████╗ ██╗    ██╗ ██████╗  ${bnc}║\n";
 printf "${bnc}║${bmag}  ██╔══██╗████╗ ████║████╗  ██║██╔════╝╚══███╔╝██║██╔══██╗██║    ██║██╔════╝  ${bnc}║\n";
@@ -132,7 +159,7 @@ printf "${bnc}║%s║${nc}\n" "$(align::center $COLS_NUM "$pr_descr")"
 printf "${bnc}║%s║${nc}\n" "$(align::center $COLS_NUM " ")"
 printf "${bnc}║%s║${nc}\n" "$(align::center $COLS_NUM " ")"
 printf "${bld}║%s${bnc}║${nc}\n" "$(align::center $((${COLS_NUM} + 31)) "  ${sym_star} ${bmag}${pr_phrase}${nc} ${sym_star}  ")"
-printf "${bnc}╚%s╝${nc}\n" "$(align::left $((${COLS_NUM})) "$equals")"
+printf "${bnc}╚%s╝${nc}\n" "$(align::center $((${COLS_NUM})) "$equals")"
 }
 
 ########################
@@ -157,7 +184,7 @@ show_menu() {
         fi
 
         printf "${redb}║%s║${nc}\n" "$(align::left $COLS_NUM " q  -  Выход")"
-        printf "${redb}╚%s╝${nc}\n" "$(align::left $((${COLS_NUM})) "$equals")"
+        printf "${redb}╚%s╝${nc}\n" "$(align::center $COLS_NUM "$equals")"
         _read_choice choice
         printf "${bnc}"
 
@@ -244,17 +271,6 @@ checkwinsize() {
     fi
 }
 multiselect() {
-
-    # little helpers for terminal print control and key input
-    ESC=$( printf "\033")
-    cursor_blink_on()   { printf "$ESC[?25h"; }
-    cursor_blink_off()  { printf "$ESC[?25l"; }
-    cursor_to()         { printf "$ESC[$1;${2:-1}H"; }
-    print_inactive()    { printf "$2   $1 "; }
-    print_active()      { printf "$2  $ESC[7m $1 $ESC[27m"; }
-    get_cursor_row()    { IFS=';' read -sdR -p $'\E[6n' ROW COL; echo ${ROW#*[}; }
-    get_cursor_col()    { IFS=';' read -sdR -p $'\E[6n' ROW COL; echo ${COL#*[}; }
-
     local return_value=$1
     local -n options=$2
     local -n defaults=$3
