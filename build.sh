@@ -6,10 +6,14 @@
 # Подключаем .[...]-env
 SELF="$(readlink -f "${BASH_SOURCE[0]}")"
 #export PATH="${SELF%/*}:$PATH"
-. ${SELF%/*}/.awg-tools-env AWG-Tools AWG-TOOLS
-. ${SELF%/*}/.${dir_name}-colors
-. ${SELF%/*}/.${dir_name}-output
-. ${SELF%/*}/.${dir_name}-func
+cur_dir=${SELF%/*}
+dir_name=${cur_dir##*/}
+me_ext=$(basename "$0")
+
+. /root/.${dir_name}-env AWG-Tools AWG-TOOLS
+. ${cur_dir}/.${dir_name}-colors
+. ${cur_dir}/.${dir_name}-output
+. ${cur_dir}/.${dir_name}-func
 
 SRC_DIR=${SELF%/*}/src
 OUT_FILE=${SELF%/*}/${dir_name}.sh

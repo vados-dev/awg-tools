@@ -24,10 +24,14 @@ fi
 # Подключаем .[...]-env
 SELF="$(readlink -f "${BASH_SOURCE[0]}")"
 #export PATH="${SELF%/*}:$PATH"
-. ${SELF%/*}/.awg-tools-env
-. ${SELF%/*}/.${dir_name}-colors
-. ${SELF%/*}/.${dir_name}-output
-. ${SELF%/*}/.${dir_name}-func
+cur_dir=${SELF%/*}
+dir_name=${cur_dir##*/}
+me_ext=$(basename "$0")
+
+. /root/.${dir_name}-env AWG-Tools AWG-TOOLS
+. ${cur_dir}/.${dir_name}-colors
+. ${cur_dir}/.${dir_name}-output
+. ${cur_dir}/.${dir_name}-func
 
 # --> Функции "system_check" <--
 check_root() { if [ $(id -u) -ne 0 ]; then die "This script must be run as root."; fi }
