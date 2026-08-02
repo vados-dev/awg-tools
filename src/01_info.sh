@@ -14,8 +14,8 @@ printf "${nc}"
 
 # --> МЕНЮ: Инфо <--
 menu_info() {
-    declare mItems=("Просмотр соединений и маршрутов" "Просмотр соединений AWG")
-    declare mActions=("ip_show" "awg_show")
+    declare mItems=("Местоположение IP" "Просмотр соединений и маршрутов" "Просмотр соединений AWG")
+    declare mActions=("ipcheck" "ip_show" "awg_show")
     declare mTitle="Информация"
     declare mDescr=""
     declare mType="section"
