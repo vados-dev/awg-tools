@@ -124,19 +124,11 @@ print_banner() {
 }
 
 show_window_head() {
-#       cursor_to $(( $LINES - 2 ))
-#    printf "_%.s" $(seq $TERM_COLS)
+#       cursor_to $(( $LINES - 2 ))#    printf "_%.s" $(seq $TERM_COLS)
 #    local _var_str="│${blub} select : key ⎵[space] | (un)select all : key ([n])[a] | move : arrow up/down/left/right or keys k/j/l/h | validation : [enter]"
-    local _str="$(echo -en "${magb}  ${mTitle}  ${bnc}│${nc}${grnB}  Хост: $(hostname)  ${bnc}│${blub} (un)select all : key ([n])[a] ${bnc}│${blub} move : arrow up/down/left/right or keys k/j/l/h ${bnc}│${blub} validation : [enter]" | column -t -s '|')"
-    local top_str=$(align::left $(($( tput cols ) + 78)) "$_str")
-
-
-#    local str_len=$(($( tput cols ) - ${#_top_str}))
-#    local str_len1=$((${TERM_COLS} - ${#_var_str}))
-#    echo ${TERM_COLS}
-#    echo $section_len
-#    echo $str_len1
-
+    local _str="$(echo -en "${magb}  ${mTitle}  ${bnc}│${nc}${whB}  Хост: $(hostname)  ${bnc}│${blub} (un)select all : key ([n])[a] ${bnc}│${blub} move : arrow up/down/left/right or keys k/j/l/h ${bnc}│${blub} validation : [enter]" | column -t -s '|')"
+    local top_str=$(align::left $(($( tput cols ) + 79)) "$_str")
+#    local str_len=$(($( tput cols ) - ${#_top_str}))#    local str_len1=$((${TERM_COLS} - ${#_var_str}))#    echo ${TERM_COLS}#    echo $section_len#    echo $str_len1
     printf "%s" "${top_str}"
 }
 
@@ -214,54 +206,37 @@ show_menu() {
 ##################################
 ### Multi-select menu template ###
 ##################################
-####################### DESCRIPTION: #######################
-#
-# multiselect is a pure bash implementation of a multi
-# selection menu.
-#
-# If "true" is passed as first argument a help (similar to
+### DESCRIPTION:
+###############
+# multiselect is a pure bash implementation of a multi selection menu.
+#   If "true" is passed as first argument a help (similar to
 # the overview in section "USAGE") will be printed before
 # showing the options. Any other value will hide it.
-#
-# The result will be stored as an array in a variable
+#   The result will be stored as an array in a variable
 # that is passed to multiselect as second argument.
-#
-# The third argument takes an array that contains all
+#   The third argument takes an array that contains all
 # available options.
-#
-# The last argument is optional and can be used to
+#   The last argument is optional and can be used to
 # preselect certain options. If used it must be an array
 # that has a value of "true" for every index of the options
 # array that should be preselected.
-#
-########################## USAGE: ##########################
-#
-#   j or ↓        => down
-#   k or ↑        => up
-#   ⎵ (Space)     => toggle selection
-#   ⏎ (Enter)     => confirm selection
-#
-######################### EXAMPLE: #########################
-#
+############
+### EXAMPLE:
+###########
 # source <(curl -sL multiselect.miu.io)
-#
 # my_options=(   "Option 1"  "Option 2"  "Option 3" )
 # preselection=( "true"      "true"      "false"    )
-#
 # multiselect "true" result my_options preselection
-#
 # idx=0
 # for option in "${my_options[@]}"; do
 #     echo -e "$option\t=> ${result[idx]}"
 #     ((idx++))
 # done
-#
-############################################################
+#############
 checkwinsize() {
     local __items=$1
     local __lines=$2
 #local __err=$3
-
     if [ $__items -ge $__lines ]; then
 #       echo "La taille de votre fenêtre ne permet d'afficher le menu correctement..."
         return 1
@@ -274,16 +249,15 @@ multiselect() {
     local return_value=$1
     local -n options=$2
     local -n defaults=$3
-
     local title="${mTitle}"
     local LINES=$( tput lines )
     local COLS=$( tput cols )
-
     local colmax=2
     local offset=$(( $COLS / $colmax ))
 
-#    awg_header
     clear
+    awg_header
+    echo " "
 
 #   checkwinsize $(( ${#options[@]}/$colmax )) $LINES
     err=`checkwinsize $(( ${#options[@]}/$colmax )) $(( $LINES - 2)); echo $?`
@@ -304,19 +278,11 @@ multiselect() {
         printf "\n"
     done
 
-    cursor_to $(( $LINES - 1 ))
-    printf "_%.s" $(seq $COLS)
-    echo -e "$magb / $title / | $blub select : key [space] | (un)select all : key ([n])[a] | move : arrow up/down/left/right or keys k/j/l/h | validation : [enter] $nc\n" | column  -t -s '|'
-
     # determine current screen position for overwriting the options
     local lastrow=`get_cursor_row`
     local lastcol=`get_cursor_col`
-    local startrow=4
-#$(($lastrow - ${#options[@]} - 2))
-    local startcol=4
-#$(($lastcol - ${#options[@]}))
-    awg_header
-    print_banner
+    local startrow=$(($lastrow - ${#options[@]}))
+    local startcol=$(($lastcol - ${#options[@]}))
 
     # ensure cursor and input echoing back on upon a ctrl+c during read -s
     trap "cursor_blink_on; stty echo; printf '\n'; exit" 2
@@ -350,6 +316,11 @@ multiselect() {
             selected[option]=true
         fi
     }
+
+    cursor_to $(( $LINES - 2 ))
+    printf "_%.s" $(seq $COLS)
+    printf "%s" "$(cecho sfW ' Действия: ')$(cecho s '│')$(cecho sWb ' Выбрать: клавиша  [пробел]  ')$(cecho s '│')$(cecho sWb ' (снять)выбрать все: клавиша ([n])[a] ')$(cecho s '│')$(cecho sWb ' перемещение: клавиши вверх↑/вниз↓/лево/право или клавиши k/j/l/h ')$(cecho s '│')$(cecho sWb ' применить выбор: клавиша  [Enter] ')"
+# | column  -t -s '|'
 
     print_options() {
         # print options by overwriting the last lines

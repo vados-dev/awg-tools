@@ -18,21 +18,23 @@
 #                                             Uppercase = Reset a style: \e[2*m
 ################################################################################
 _c() { [ $# == 0 ] && printf "\e[0m" || printf "$1" | sed 's/\(.\)/\1;/g;s/\([SDIUFNHT]\)/2\1/g;s/\([KRGYBMCW]\)/3\1/g;s/\([krgybmcw]\)/4\1/g;y/SDIUFNHTsdiufnhtKRGYBMCWkrgybmcw/12345789123457890123456701234567/;s/^\(.*\);$/\\e[\1m/g'; }
-cecho() { echo -en "$(_c $1)${2}\e[0m"; }
+
 
 nc=$(_c); bld=$(echo -en $(_c s)); sma=$(echo -en $(_c d)); und=$(echo -en $(_c u)); strt=$(echo -en $(_c t));
 bnc=$(_c 0s);
 
 if tty >/dev/null 2>&-; then
+cecho() { echo -en "$(_c $1)${2}\e[0m"; }
     blk=$(_c K); red=$(_c R); grn=$(_c G); yel=$(_c Y); blu=$(_c B); mag=$(_c M); cy=$(_c C); wh=$(_c W);
     bblk=$(_c sK); bred=$(_c sR); bgrn=$(_c sG); byel=$(_c sY); bblu=$(_c sB); bmag=$(_c sM); bcy=$(_c sC); bwh=$(_c sW);
     blkb=$(_c sWk); redb=$(_c sWr); grnb=$(_c hBg); yelb=$(_c By); blub=$(_c sWb); magb=$(_c sWm); cyb=$(_c Kc); whb=$(_c Kw);
-    Bblk=$(_c sfW); Bred=$(_c sfWr); Bgrn=$(_c fBg); Byel=$(_c fBy); Bblu=$(_c sfWb); Bmag=$(_c sfWm); Bcy=$(_c fKc); Bwh=$(_c fKw);
-    blkB=$(_c sfW); redB=$(_c FsWr); grnB=$(_c fBg); yelB=$(_c fBy); bluB=$(_c sfWb); magB=$(_c sfWm); cyB=$(_c fKc); whB=$(_c fKw);
+#    Bblk=$(_c sfW); Bred=$(_c sfWr); Bgrn=$(_c fBg); Byel=$(_c fBy); Bblu=$(_c sfWb); Bmag=$(_c sfWm); Bcy=$(_c fKc); Bwh=$(_c fKw);
+    blkB=$(_c sfW); redB=$(_c sfWr); grnB=$(_c fBg); yelB=$(_c fBy); bluB=$(_c sfWb); magB=$(_c sfWm); cyB=$(_c fKc); whB=$(_c sfWk);
     rev=$(tput rev); blink=$(_c f); neg=$(_c n);
     sym_ok=$(cecho Gs ✅); sym_err=$(cecho Rf ❌); sym_install=$(cecho s 💿);
     sym_info=$(cecho Bs 📋);sym_warn=$(cecho sY ⚠⚠); sym_dbg=$(cecho sW 🔧); sym_star=$(cecho sY ✨);
 else
+cecho() { echo -n "${2}"; }
     neg=''; blink=''; rev='';
     blk=''; red=''; grn=''; yel=''; blu=''; mag=''; cy=''; wh='';
     blkb=''; redb=''; grnb=''; yelb=''; blub=''; magb=''; cyb=''; whb='';
