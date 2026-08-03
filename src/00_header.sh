@@ -25,13 +25,19 @@ fi
 SELF="$(readlink -f "${BASH_SOURCE[0]}")"
 #export PATH="${SELF%/*}:$PATH"
 cur_dir=${SELF%/*}
-dir_name=${cur_dir##*/}
+#dir_name=${cur_dir##*/}
 me_ext=$(basename "$0")
+me="${me_ext%.*}"
 
-. /root/.${dir_name}-env AWG-Tools AWG-TOOLS
-. ${cur_dir}/.${dir_name}-colors
-. ${cur_dir}/.${dir_name}-output
-. ${cur_dir}/.${dir_name}-func
+. /root/.${me}/.${me}-env
+
+echo $me
+echo "cur_dir=$cur_dir"
+echo "dir_name=$dir_name"
+
+. ${env_dir}/.${app_name}-colors
+. ${env_dir}/.${app_name}-output
+. ${env_dir}/.${app_name}-func
 
 # --> Функции "system_check" <--
 check_root() { if [ $(id -u) -ne 0 ]; then die "This script must be run as root."; fi }

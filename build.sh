@@ -1,22 +1,30 @@
 #!/usr/bin/env bash
 # --> BUILD <--
-# - собирает модули из src/ в один файл awg_tools.sh -
+# - собирает модули из src/ в один файл ${dir_name}.sh -
 # - порядок файлов важен: header первый, entry последний -
 
-# Подключаем .[...]-env
 SELF="$(readlink -f "${BASH_SOURCE[0]}")"
 #export PATH="${SELF%/*}:$PATH"
 cur_dir=${SELF%/*}
 dir_name=${cur_dir##*/}
-me_ext=$(basename "$0")
+PROJ_ROOT=${PROJ_ROOT:-/root/.${dir_name}}
+SRC_DIR=${cur_dir}/src
 
-. /root/.${dir_name}-env AWG-Tools AWG-TOOLS
-. ${cur_dir}/.${dir_name}-colors
-. ${cur_dir}/.${dir_name}-output
-. ${cur_dir}/.${dir_name}-func
 
-SRC_DIR=${SELF%/*}/src
-OUT_FILE=${SELF%/*}/${dir_name}.sh
+#######################
+### Подключаем env: ###
+#######################
+source ${PROJ_ENV:-${PROJ_ROOT}/.${dir_name}-env}
+
+echo "cur_dir=$cur_dir"
+echo "dir_name=$dir_name"
+echo "PROJ_ROOT=$PROJ_ROOT"
+echo
+echo "me_ext=$me_ext"
+echo "me=$me"
+#exit 0
+
+OUT_FILE="${PROJ_ROOT}/bin/${dir_name}.sh"
 
 set -euo pipefail
 
