@@ -151,7 +151,7 @@ install_nm_awg() {
     # System installation (for RPM packages)
     cmake .. -DWITH_GTK3=OFF -DWITH_GTK4=OFF -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=lib64 > /dev/null 2>&1 && log "Сборка прошла успешно." || log_error "Ошибка сборки \"cmake\"!"
     cmake --build . > /dev/null 2>&1 && log "Билд сделан." || log_error "Ошибка команды \"cmake build .\"!"
-    cpack -G RPM 2>/dev/null && log "rpm пакет создан." || log_error "Ошибка создания rpm!"
+    if cpack -G RPM 2>/dev/null; then log "rpm пакет создан."; else log_error "Ошибка создания rpm!"; return 1; fi
     #rpm -i NetworkManager-amneziawg-*.rpm
     dnf -y install $(ls | grep NetworkManager-amneziawg-*.rpm) > /dev/null 2>&1 && log "rpm пекет установлен." || log_error "Ошибка установки \"dnf install\"!"
     rm -rf "$TMP_DIR" > /dev/null 2>&1 && log "Папка ${TMP_DIR} удалена." || log_error "Ошибка удаления ${TMP_DIR}!"
