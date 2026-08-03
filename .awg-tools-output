@@ -87,7 +87,7 @@ align::center() {
   local -i offset=$(((${#str} - length) / 2))
   local -i pad_left=$(((width - length) / 2))
   local -i pad_right=$((width - length - pad_left))
-  printf "%*s%s%*s" $pad_left "" "${str:offset:length}" $pad_right ""
+  printf "%*s%s%*s" $pad_left '' "${str:offset:length}" $pad_right ''
 }
 
 stars=${byel}'✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨✨'${nc};
@@ -127,8 +127,8 @@ show_window_head() {
 #       cursor_to $(( $LINES - 2 ))
 #    printf "_%.s" $(seq $TERM_COLS)
 #    local _var_str="│${blub} select : key ⎵[space] | (un)select all : key ([n])[a] | move : arrow up/down/left/right or keys k/j/l/h | validation : [enter]"
-    local _str="$(echo -en "${und}${magb}  ${mTitle}  ${bnc}${und}│${blub} hostname: $(hostname) ${bnc}${und}│${blub} (un)select all : key ([n])[a] ${bnc}${und}│${blub} move : arrow up/down/left/right or keys k/j/l/h ${bnc}${und}│${blub} validation : [enter]" | column -t -s '|')"
-    local top_str=$(align::left $(($( tput cols ) + 102)) "$_str")
+    local _str="$(echo -en "${magb}  ${mTitle}  ${bnc}│${nc}${grnB}  Хост: $(hostname)  ${bnc}│${blub} (un)select all : key ([n])[a] ${bnc}│${blub} move : arrow up/down/left/right or keys k/j/l/h ${bnc}│${blub} validation : [enter]" | column -t -s '|')"
+    local top_str=$(align::left $(($( tput cols ) + 78)) "$_str")
 
 
 #    local str_len=$(($( tput cols ) - ${#_top_str}))
@@ -158,7 +158,7 @@ printf "${bnc}║%s║${nc}\n" "$(align::center $COLS_NUM "$pr_name v$version")"
 printf "${bnc}║%s║${nc}\n" "$(align::center $COLS_NUM "$pr_descr")"
 printf "${bnc}║%s║${nc}\n" "$(align::center $COLS_NUM " ")"
 printf "${bnc}║%s║${nc}\n" "$(align::center $COLS_NUM " ")"
-printf "${bld}║%s${bnc}║${nc}\n" "$(align::center $((${COLS_NUM} + 31)) "  ${sym_star} ${bmag}${pr_phrase}${nc} ${sym_star}  ")"
+printf "${bld}║%s${bnc}║${nc}\n" "$(align::center $((${COLS_NUM} + 31)) " ${sym_star} $(cecho sM "${pr_phrase}") ${sym_star} ")"
 printf "${bnc}╚%s╝${nc}\n" "$(align::center $((${COLS_NUM})) "$equals")"
 }
 

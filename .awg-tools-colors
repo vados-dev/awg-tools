@@ -18,17 +18,20 @@
 #                                             Uppercase = Reset a style: \e[2*m
 ################################################################################
 _c() { [ $# == 0 ] && printf "\e[0m" || printf "$1" | sed 's/\(.\)/\1;/g;s/\([SDIUFNHT]\)/2\1/g;s/\([KRGYBMCW]\)/3\1/g;s/\([krgybmcw]\)/4\1/g;y/SDIUFNHTsdiufnhtKRGYBMCWkrgybmcw/12345789123457890123456701234567/;s/^\(.*\);$/\\e[\1m/g'; }
+cecho() { echo -en "$(_c $1)${2}\e[0m"; }
 
-nc=$(echo -e $(_c 0)); bld=$(echo -e $(_c s)); sma=$(echo -e $(_c d)); und=$(echo -e $(_c u)); strt=$(echo -e $(_c t));
-bnc=$(echo -e $(_c 0)$(_c s));
+nc=$(_c); bld=$(echo -en $(_c s)); sma=$(echo -en $(_c d)); und=$(echo -en $(_c u)); strt=$(echo -en $(_c t));
+bnc=$(_c 0s);
 
 if tty >/dev/null 2>&-; then
-    blk=$(_c K); red=$(_c R); grn=$(_c G); yel=$(_c Y); blu=$(_c Bkh); mag=$(_c Mkh); cy=$(_c Ckh); wh=$(_c Wkh);
-    blkb=$(_c Wk); redb=$(_c Wrs); grnb=$(_c Gfn); yelb=$(_c Byf); blub=$(_c Wbs); magb=$(_c sWm); cyb=$(_c Cfn); whb=$(_c Kwf);
-    bblk=$(_c Ks); bred=$(_c Rs); bgrn=$(_c Gs); byel=$(_c sY); bblu=$(_c Bks); bmag=$(echo -e $(_c sM)); bcy=$(_c Cks); bwh=$(_c Wks);
+    blk=$(_c K); red=$(_c R); grn=$(_c G); yel=$(_c Y); blu=$(_c B); mag=$(_c M); cy=$(_c C); wh=$(_c W);
+    bblk=$(_c sK); bred=$(_c sR); bgrn=$(_c sG); byel=$(_c sY); bblu=$(_c sB); bmag=$(_c sM); bcy=$(_c sC); bwh=$(_c sW);
+    blkb=$(_c sWk); redb=$(_c sWr); grnb=$(_c hBg); yelb=$(_c By); blub=$(_c sWb); magb=$(_c sWm); cyb=$(_c Kc); whb=$(_c Kw);
+    Bblk=$(_c sfW); Bred=$(_c sfWr); Bgrn=$(_c fBg); Byel=$(_c fBy); Bblu=$(_c sfWb); Bmag=$(_c sfWm); Bcy=$(_c fKc); Bwh=$(_c fKw);
+    blkB=$(_c sfW); redB=$(_c FsWr); grnB=$(_c fBg); yelB=$(_c fBy); bluB=$(_c sfWb); magB=$(_c sfWm); cyB=$(_c fKc); whB=$(_c fKw);
     rev=$(tput rev); blink=$(_c f); neg=$(_c n);
-    sym_ok=$(printf "${grn}%s${nc}" ✅); sym_err=$(printf "${red}%s${nc}" ❌); install=$(printf "${bnc}%s${nc}" 💿);
-    sym_info=$(printf "${bblu}%s${nc}" 📋);sym_warn=$(printf "${byel}%s${nc}" "⚠⚠"); sym_dbg=$(printf "${bwh}%s${nc}" 🔧); sym_star=$(echo -en "${byel}✨${nc}");
+    sym_ok=$(cecho Gs ✅); sym_err=$(cecho Rf ❌); sym_install=$(cecho s 💿);
+    sym_info=$(cecho Bs 📋);sym_warn=$(cecho sY ⚠⚠); sym_dbg=$(cecho sW 🔧); sym_star=$(cecho sY ✨);
 else
     neg=''; blink=''; rev='';
     blk=''; red=''; grn=''; yel=''; blu=''; mag=''; cy=''; wh='';
