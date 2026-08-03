@@ -127,7 +127,7 @@ show_window_head() {
 #       cursor_to $(( $LINES - 2 ))
 #    printf "_%.s" $(seq $TERM_COLS)
 #    local _var_str="│${blub} select : key ⎵[space] | (un)select all : key ([n])[a] | move : arrow up/down/left/right or keys k/j/l/h | validation : [enter]"
-    local _str="$(echo -en "${und}${magb}  ${mTitle}  ${bnc}${und}│${blub} select : key ⎵[space] ${bnc}${und}│${blub} (un)select all : key ([n])[a] ${bnc}${und}│${blub} move : arrow up/down/left/right or keys k/j/l/h ${bnc}${und}│${blub} validation : [enter]" | column -t -s '|')"
+    local _str="$(echo -en "${und}${magb}  ${mTitle}  ${bnc}${und}│${blub} hostname: $(hostname) ${bnc}${und}│${blub} (un)select all : key ([n])[a] ${bnc}${und}│${blub} move : arrow up/down/left/right or keys k/j/l/h ${bnc}${und}│${blub} validation : [enter]" | column -t -s '|')"
     local top_str=$(align::left $(($( tput cols ) + 102)) "$_str")
 
 
