@@ -1,7 +1,7 @@
 # --> Функции подменю "Диагностика" <--
 
 awg_lsmod() {
-    if ! lsmod | grep amneziawg >/dev/null 2>&1; then
+    if ! lsmod | grep amneziawg 2>/dev/null; then
         log_warn "Модуль amneziawg не загружен. Его можно добавить в автозагрузку, в меню \"Установка\"."
         return 1
     else

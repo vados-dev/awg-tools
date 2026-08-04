@@ -1,8 +1,8 @@
 # --> Функции подменю "Установка модуля ядра amneziawg" <--
 
 install_deps() {
-    dnf update -y || true
-#    dnf check-update || true
+#    dnf update -y || true
+    dnf check-update || true
     dnf config-manager --enable crb || true
     dnf install -y epel-release || true
     dnf clean all || true
@@ -17,64 +17,106 @@ remove_deps() {
 amf="/etc/modules-load.d/amneziawg.conf"
 wmf="/etc/modules-load.d/wireguard.conf"
 
+load_awg_module() {
+    if ! lsmod | grep amneziawg > /dev/null 2>&1; then
+        log "Модуль amneziawg не загружен, пробую загрузить..."
+        modprobe amneziawg 2>/dev/null
+        ! lsmod | grep amneziawg > /dev/null 2>&1 && log_error "Не удалось загрузить модуль amneziawg!" || log "Модуль amneziawg загружен."
+    else
+        log "Модуль amneziawg загружен."
+    fi
+}
+
 add_awg_to_modules() {
     mkdir -p "$(dirname "$amf")"
     if ! grep -qxF 'amneziawg' "$amf" 2>/dev/null; then
-        if echo "amneziawg" > "$amf" 2>/dev/null; then log "Записан $amf."; else log_warn "Ошибка записи $amf!"; fi
-        if ! modprobe amneziawg 2>/dev/null; then log "Модуль amneziawg загружен."; else log_error "Модуль amneziawg не загружен!"; fi
+        if echo "amneziawg" > "$amf" 2>/dev/null; then log "Модуль amneziawg добавлен в автозагрузку."; load_awg_module; else log_warn "Ошибка записи $amf!"; return 1; fi
+    else
+        log "Модуль amneziawg уже есть в автозагрузке."
+        load_awg_module
     fi
 }
+unload_awg_module() {
+    modprobe -r amneziawg 2>/dev/null
+    lsmod | grep amneziawg > /dev/null 2>&1 || return 0
+}
 del_awg_from_modules() {
-    if rm -f $amf 2>/dev/null; then log "$amf удалён."; else log_error "Ошибка удаления $amf!"; fi
+    if ! unload_awg_module > /dev/null 2>&1; then
+        log_error "Не удалось выгрузить модуль amneziawg!"
+        return 0
+    else
+        log "Модуль amneziawg выгружен."
+        if rm -f $amf 2>/dev/null; then log "Модуль amneziawg удалён из автозагрузки."; else log_error "Ошибка удаления $amf из автозагрузки!"; fi
+    fi
+}
+load_wg_module() {
+    if ! lsmod | grep wireguard > /dev/null 2>&1; then
+        log "Модуль wireguard не загружен, пробую загрузить..."
+        modprobe wireguard 2>/dev/null
+        ! lsmod | grep wireguard > /dev/null 2>&1 && log_error "Не удалось загрузить модуль wireguard!" || log "Модуль wireguard загружен."
+    else
+        log "Модуль wireguard загружен."
+    fi
 }
 add_wg_to_modules() {
     mkdir -p "$(dirname "$wmf")"
     if ! grep -qxF 'wireguard' "$wmf" 2>/dev/null; then
-        if echo "wireguard" > "$wmf" 2>/dev/null; then log "Записан $wmf."; else log_warn "Ошибка записи $wmf!"; fi
-        if modprobe wireguard 2>/dev/null; then log "Модуль wireguard загружен."; else log_error "Модуль wireguard не загружен!"; fi
+        if echo "wireguard" > "$wmf" 2>/dev/null; then log "Модуль wireguard добавлен в автозагрузку."; load_wg_module; else log_warn "Ошибка записи $wmf!"; return 1; fi
+    else
+        log "Модуль wireguard уже есть в автозагрузке."
+        load_wg_module
     fi
 }
+unload_wg_module() {
+    modprobe -r wireguard 2>/dev/null
+    lsmod | grep wireguard > /dev/null 2>&1 || return 0
+}
 del_wg_from_modules() {
-    if rm -f $wmf 2>/dev/null; then log "$wmf удалён."; else log_error "Ошибка удаления $wmf!"; fi
+    if ! unload_wg_module > /dev/null 2>&1; then
+        log_error "Не удалось выгрузить модуль wireguard!"
+        return 0
+    else
+        log "Модуль wireguard выгружен."
+        if rm -f $wmf 2>/dev/null; then log "Модуль wireguard удалён из автозагрузки."; else log_error "Ошибка удаления $wmf из автозагрузки!"; fi
+    fi
 }
 mod_awg_install() {
     if ! dnf list installed "dkms" 2>/dev/null | grep -q "Installed Packages"; then
         install_deps
     fi
-    local gitUrl="$1"
-    rm -rf ./setup
-    git clone ${gitUrl} ${AWG_MODULE_SETUP_DIR}
-#
-    cd ${AWG_MODULE_SETUP_DIR}/src && \
-    sudo make dkms-install && \
-    sudo dkms install "amneziawg/$(make print-version)"
+    TMP_DIR=$(mktemp -d -t install_nm_awg-XXXXXX)
+    chmod 0700 "$TMP_DIR"
+    git clone -b ${AWG_MODULE_GIT_BRANCH} "${AWG_MODULE_GIT_URL}" "${TMP_DIR}" 2>/dev/null; cd "${TMP_DIR}/src" 2>/dev/null && log "Репозиотрий клонирован." || log_error "Ошибка клона репозитория!"
+# local gitUrl="$1" #    rm -rf ./setup #    git clone ${gitUrl} ${AWG_MODULE_SETUP_DIR} # cd ${AWG_MODULE_SETUP_DIR}/src && \
+    sudo make dkms-install > /dev/null 2>&1 && log "\"sudo make dkms-install\" выполнено успешно." || log_error "Ошибка выполнения \"sudo make dkms-install\"!"
+    sudo dkms install "amneziawg/$(make print-version)" > /dev/null 2>&1 && log "Установка модуля ядра amneziawg успешно завершена." || log_error "Ошибка установки модуля ядра amneziawg!"
+#    sudo dkms add -m amneziawg -v ${AWG_MODULE_VERSION} #    sudo dkms build -m amneziawg -v ${AWG_MODULE_VERSION} #    sudo dkms install -m amneziawg -v ${AWG_MODULE_VERSION}
     add_awg_to_modules
-    rm -rf ${AWG_MODULE_SETUP_DIR}
+    rm -rf "$TMP_DIR" > /dev/null 2>&1 && log "Папка ${TMP_DIR} удалена." || log_error "Ошибка удаления ${TMP_DIR}!"
 }
-mod_awg_get_url() {
-    local vadUrl="https://github.com/vados-dev/amneziawg-linux-kernel-module.git"
-    local amnUrl="https://github.com/amnezia-vpn/amneziawg-linux-kernel-module.git"
-    local advUrl="https://github.com/AdvancedWG/amneziawg-linux-kernel-module-awg.git"
 
-    while true; do
-        echo -e "${bgrn}1${bnc}) vados-dev"
-        echo -e "${bnc}2${bnc}) amnezia-vpn"
-        echo -e "${bnc}3${bnc}) advancedWG"
-        echo -e ""
-        echo -e "${byel}0${bnc}) Назад"
-        echo -e "${magb}[ Enter ]${bnc} Назад"
-        echo ""
-        eli_read_choice choice
-
-        case "$choice" in
-            1) mod_awg_install "$vadUrl" && return 0 || print_warn "Ошибка при настройке" ;;
-            2) mod_awg_install "$amnUrl" && return 0 || print_warn "Ошибка при показе статуса" ;;
-            3) mod_awg_install "$advUrl" && return 0 || print_warn "Ошибка при тесте" ;;
-            0) return 0 ;;
-            *) print_warn "Введите число от 0 до 4" ;;
-        esac
-    done
-}
+#mod_awg_get_url() {
+#    local vadUrl="https://github.com/vados-dev/amneziawg-linux-kernel-module.git"
+#    local amnUrl="https://github.com/amnezia-vpn/amneziawg-linux-kernel-module.git"
+#    local advUrl="https://github.com/AdvancedWG/amneziawg-linux-kernel-module-awg.git"
+#    while true; do
+#        echo -e "${bgrn}1${bnc}) vados-dev"
+#        echo -e "${bnc}2${bnc}) amnezia-vpn"
+#        echo -e "${bnc}3${bnc}) advancedWG"
+#        echo -e ""
+#        echo -e "${byel}0${bnc}) Назад"
+#        echo -e "${magb}[ Enter ]${bnc} Назад"
+#        echo ""
+#        eli_read_choice choice
+#        case "$choice" in
+#            1) mod_awg_install "$vadUrl" && return 0 || print_warn "Ошибка при настройке" ;;
+#            2) mod_awg_install "$amnUrl" && return 0 || print_warn "Ошибка при показе статуса" ;;
+#            3) mod_awg_install "$advUrl" && return 0 || print_warn "Ошибка при тесте" ;;
+#            0) return 0 ;;
+#            *) print_warn "Введите число от 0 до 4" ;;
+#        esac
+#    done
+#}
 mod_awg_remove() {
     sudo dkms remove "amneziawg/$(dkms status | grep amneziawg | awk -F'[/, ]+' '{print $2}' | head -1)" --all
     del_awg_from_modules
@@ -82,8 +124,12 @@ mod_awg_remove() {
 }
 
 mod_awg_reinstall() {
-    mod_awg_remove
-    mod_awg_install
+    if ! dnf list installed "dkms" 2>/dev/null | grep -q "Installed Packages"; then
+        install_deps
+    fi
+    sudo dkms install "amneziawg/$(dkms status | grep amneziawg | awk -F'[/, ]+' '{print $2}' | head -1)" -k $(uname -r)
+#    mod_awg_remove
+#    mod_awg_install
 }
 
 # --> МЕНЮ: Установка модуля ядра amneziawg <--
