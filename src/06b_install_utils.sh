@@ -6,7 +6,7 @@ install_packages() {
     local rpm_pkg
     local NEED_COPR=false
     local COPR=""
-    log "Checking rpm packages: ${packages[*]}..."
+    log "Checking for installing packages: ${packages[*]}..."
     for rpm_pkg in "${packages[@]}"; do
         if ! dnf list installed "$rpm_pkg" 2>/dev/null | grep -q "Installed Packages"; then
             if [[ "$rpm_pkg" == "amneziawg-tools" ]]; then
@@ -142,16 +142,39 @@ configure_packages() {
 install_packages $INSTALLATION_PACKAGES
 }
 
+check_nm_awg_deps() {
+    local packages=("$@")
+    local to_install=()
+    local deps_pkg
+    log "Проверка зависимостей: ${packages[*]}..."
+    for deps_pkg in "${packages[@]}"; do
+        if ! dnf list installed "$deps_pkg" > /dev/null 2>&1 | grep -q "Installed Packages"; then
+             to_install+=("$deps_pkg")
+        fi
+    done
+        if [ ${#to_install[@]} -eq 0 ]; then
+            log "Все зависимости установлены."
+            return 0
+        else
+            log "Установка: ${to_install[*]}..."
+            sudo dnf install -y ${to_install[*]} > /dev/null 2>&1 || return 1
+        fi
+}
+
 install_nm_awg() {
+    local nm_deps=()
+    nm_deps=("NetworkManager-libnm intltool cmake rpm-build gcc-c++")
+    check_nm_awg_deps $nm_deps > /dev/null 2>&1 || return 1
+
     TMP_DIR=$(mktemp -d -t install_nm_awg-XXXXXX)
     chmod 0700 "$TMP_DIR"
     git clone -b master "https://github.com/vovochka404/network-manager-amneziawg.git" "${TMP_DIR}" 2>/dev/null; cd "${TMP_DIR}" 2>/dev/null && log "Репозиотрий клонирован." || log_error "Ошибка клона репозитория!"
 #git fetch origin master #git pull origin master
     mkdir -p build && cd build > /dev/null 2>&1 && log "Папка $TMP_DIR/build создана." || log_error "Ошибка создания директории build!"
     # System installation (for RPM packages)
-    cmake .. -DWITH_GTK3=OFF -DWITH_GTK4=OFF -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=lib64 > /dev/null 2>&1 && log "Сборка прошла успешно." || log_error "Ошибка сборки \"cmake\"!"
+    cmake .. -DWITH_GTK3=OFF -DWITH_GTK4=OFF -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=lib64 2>&1 && log "Сборка прошла успешно." || log_error "Ошибка сборки \"cmake\"!"
     cmake --build . > /dev/null 2>&1 && log "Билд сделан." || log_error "Ошибка команды \"cmake build .\"!"
-    if cpack -G RPM > /dev/null 2>&1; then log "rpm пакет создан."; else log_error "Ошибка создания rpm!"; return 1; fi
+    cpack -G RPM > /dev/null 2>&1 && log "rpm пакет создан." || log_error "Ошибка создания rpm!"
     #rpm -i NetworkManager-amneziawg-*.rpm
     dnf -y install $(ls | grep NetworkManager-amneziawg-*.rpm) > /dev/null 2>&1 && log "rpm пекет установлен." || log_error "Ошибка установки \"dnf install\"!"
     rm -rf "$TMP_DIR" > /dev/null 2>&1 && log "Папка ${TMP_DIR} удалена." || log_error "Ошибка удаления ${TMP_DIR}!"
