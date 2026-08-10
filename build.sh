@@ -39,9 +39,9 @@ FILES=(
     "03_nmcli.sh"
     "04_fwcmd.sh"
     "05_diag.sh"
+    "06_install.sh"
     "06a_install_awg_mod.sh"
     "06b_install_utils.sh"
-    "07_install.sh"
     "main.sh"
     "99_entry.sh"
 )

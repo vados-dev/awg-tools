@@ -9,6 +9,10 @@ ESC=$( printf "\033")
 cursor_blink_on()   { printf "$ESC[?25h"; }
 cursor_blink_off()  { printf "$ESC[?25l"; }
 cursor_to()         { printf "$ESC[$1;${2:-1}H"; }
+cursor_move_up()    { printf "$ESC[${1}A"; }
+cursor_move_down()  { printf "$ESC[${1}B"; }
+cursor_move_left()  { printf "$ESC[${1}D"; }
+cursor_move_right() { printf "$ESC[${1}C"; }
 print_inactive()    { printf "$2   $1 "; }
 print_active()      { printf "$2  $ESC[7m $1 $ESC[27m"; }
 get_cursor_row()    { IFS=';' read -sdR -p $'\E[6n' ROW COL; echo ${ROW#*[}; }
@@ -124,17 +128,14 @@ print_banner() {
 }
 
 show_window_head() {
-#       cursor_to $(( $LINES - 2 ))#    printf "_%.s" $(seq $TERM_COLS)
-#    local _var_str="│${blub} select : key ⎵[space] | (un)select all : key ([n])[a] | move : arrow up/down/left/right or keys k/j/l/h | validation : [enter]"
+#cursor_to $(( $LINES - 2 ))#    printf "_%.s" $(seq $TERM_COLS) #local _var_str="│${blub} select : key ⎵[space] | (un)select all : key ([n])[a] | move : arrow up/down/left/right or keys k/j/l/h | validation : [enter]"
     local _str="$(echo -en "${magb}  ${mTitle}  ${bnc}│${nc}${whB}  Хост: $(hostname)  ${bnc}│${blub} (un)select all : key ([n])[a] ${bnc}│${blub} move : arrow up/down/left/right or keys k/j/l/h ${bnc}│${blub} validation : [enter]" | column -t -s '|')"
-    local top_str=$(align::left $(($( tput cols ) + 79)) "$_str")
-#    local str_len=$(($( tput cols ) - ${#_top_str}))#    local str_len1=$((${TERM_COLS} - ${#_var_str}))#    echo ${TERM_COLS}#    echo $section_len#    echo $str_len1
+    local top_str=$(align::left $(($( tput cols ) + 79)) "$_str") #local str_len=$(($( tput cols ) - ${#_top_str}))#    local str_len1=$((${TERM_COLS} - ${#_var_str}))#    echo ${TERM_COLS}#    echo $section_len#    echo $str_len1
     printf "%s" "${top_str}"
 }
 
 awg_header() {
 clear
-#cursor_to 0 0
 show_window_head
 printf "\n\n";
 printf "${bnc}╔%s╗${nc}\n" "$(align::center $((${COLS_NUM})) "$equals")"
@@ -158,10 +159,11 @@ printf "${bnc}╚%s╝${nc}\n" "$(align::center $((${COLS_NUM})) "$equals")"
 ##### MENU OPTIONS #####
 ########################
 show_menu() {
-    local choice
-    local index=0
     awg_header
+
     while true; do
+    local choice
+        local index=0
         printf "${blub}╔%s╗${nc}\n" "$(align::center $COLS_NUM "$equals ${mTitle} $equals")"
         printf "${blub}║%s║${nc}\n" "$(align::center $COLS_NUM " ")"
         for idx in ${!mItems[@]}; do
@@ -192,13 +194,20 @@ show_menu() {
 
         if [[ "$choice" =~ ^[1-9]+$ ]] && (( choice >= 1 && choice <= ${#mActions[@]} )); then
             "${mActions[choice - 1]}"
+            if [[ "$mType" == "section" ]]; then
+                menu_pause
+            fi
         else
-            printf "\n    ${bred}%s %d.${nc}\n\n" "Введите число от 1 до " ${index}
-        fi
-
-        if [[ "$mType" == "section" ]]; then
+            local enterExit="\n    Для выхода введите \"${byel}q${bmag}\"."
+            if [[ "$mType" == "main" ]]; then
+                backOrExit=${enterExit}
+            else
+                backOrExit="\n    Либо введите \"${byel}0${bmag}\" для возврата пердыдущее меню.${enterExit}"
+            fi
+            printf "\n${bmag}    Введите число от \"${byel}1${bmag}\" до \"${byel}%d${bmag}\".${backOrExit}${nc}\n\n" ${index}
             menu_pause
         fi
+
         awg_header
     done
 }

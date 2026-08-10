@@ -8,6 +8,11 @@ function fw_check_xml { ! command -v grep "error" | /etc/firewalld/tools/check.s
 ###############################
 ### функции основной логики ###
 ###############################
+fw_restart() {
+_fw_restart=$(systemctl restart firewalld.service | awk '{print "    " $0}')
+printf "\n    Перезапуск firewalld:${bgrn}%s\n${nc}" "${_fw_restart}";
+}
+
 function show_command { printf "${bnc}Запуск ${bgrn}%s${bnc} c аргументами: [${byel} %s ${bnc}].${nc}\n" "$1" "$2"; }
 fw_def_cmd() {
     if ! fw_check_xml 2>&1; then
@@ -153,14 +158,14 @@ fw_show_help() {
         printf "   ${bnc}┌%s┐${nc}\n" "$(align::left $COLS_NUM "$dashes")";
         printf "   ${bnc}│${blub}%s${bnc}│${nc}\n" "$(align::left $COLS_NUM " ")";
         printf "   ${bnc}│${blub}${byel}%s${bnc}│${nc}\n" "$(align::left $COLS_NUM " Опции:")";
+        printf "   ${bnc}│${blub}%s${bnc}│${nc}\n" "$(align::left $COLS_NUM " -r, restart           Перезапустить")";
         printf "   ${bnc}│${blub}%s${bnc}│${nc}\n" "$(align::left $COLS_NUM " -rl, reload           Перечитать конфиги")";
         printf "   ${bnc}│${blub}%s${bnc}│${nc}\n" "$(align::left $COLS_NUM " -pmt, perm            Перманентно")";
         printf "   ${bnc}│${blub}%s${bnc}│${nc}\n" "$(align::left $COLS_NUM " -la, list-all         Вывод всех правил")";
         printf "   ${bnc}│${blub}%s${bnc}│${nc}\n" "$(align::left $COLS_NUM " -laz, list-all-zones  Вывод всех зон")";
         printf "   ${bnc}│${blub}%s${bnc}│${nc}\n" "$(align::left $COLS_NUM " -h, --help            Показать эту справку и выйти")";
         printf "   ${bnc}│${blub}%s${bnc}│${nc}\n" "$(align::left $COLS_NUM " ")";
-        printf "   ${bnc}└%s┘${nc}\n" "$(align::left $((${COLS_NUM})) "$dashes")";
-        echo
+        printf "   ${bnc}└%s┘${nc}\n\n" "$(align::left $((${COLS_NUM})) "$dashes")";
 }
 
 fw_fwcmd() {
@@ -171,6 +176,7 @@ FW_CMD="firewall-cmd"; FW_NO_ARGS=0; FW_RUN_CMD=""; FW_RUN=""; FW_ARGS=""; FW_HE
 let $# || { FW_NO_ARGS=1; FW_HELP=1; }
 while [[ $# -gt 0 ]]; do
     case $1 in
+        -r|restart)           FW_RUN_CMD="fw_restart"; break ;;
         -rl|reload)           FW_RUN_CMD="fw_def_cmd"; FW_ARGS="--reload"; break ;;
         -pmt|perm)            FW_RUN_CMD="fw_def_cmd"; FW_ARGS="--permanent $2 $3 $4"; break ;;
         -la|list-all)         FW_RUN_CMD="fw_def_cmd"; FW_ARGS="--list-all"; break ;;
@@ -187,6 +193,7 @@ done
 if [[ "$FW_NO_ARGS" -eq 1 ]]; then echo -e " ${bred}Пустые аргументы [${byel}ОПЦИИ${bred}]! ${bnc}\n${nc}"; FW_RUN_CMD="fw_help"; fi
 if [[ "$FW_RUN_CMD" == "fw_help" ]]; then fw_show_help "$FW_HELP_EXIT_RC"; exit $FW_HELP_EXIT_RC; fi
 if [[ "$FW_RUN_CMD" == "fw_def_cmd" ]]; then fw_def_cmd $FW_ARGS; exit $FW_HELP_EXIT_RC; fi
+if [[ "$FW_RUN_CMD" == "fw_restart" ]]; then fw_restart; exit $FW_HELP_EXIT_RC; fi
 if [[ "$FW_RUN_CMD" == "fw_run_cmd" ]]; then fw_run_cmd $FW_RUN $FW_ARGS; exit $FW_HELP_EXIT_RC; fi
 if [[ -z "$FW_RUN_CMD" ]]; then fw_show_help; else FW_ARGS="$1"; fw_run_once "$FW_ARGS"; exit $FW_HELP_EXIT_RC; fi
 }

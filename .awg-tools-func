@@ -29,14 +29,6 @@ log_msg() {
 ifext="$(ip route show default | grep -oP 'dev \K\S+')";
 ipext="$(ip route show default | grep -oP 'via \K\S+')";
 
-#######################
-### Функции курсора ###
-#######################
-function cursor_move_up { printf '\033[%sA' "$1"; }
-function cursor_move_down { printf '\033[%sB' "$1"; }
-function cursor_move_left { printf '\033[%sD' "$1"; }
-function cursor_move_right { printf '\033[%sC' "$1"; }
-
 #####################
 ### Функции ввода ###
 #####################
@@ -156,7 +148,7 @@ ask_raw() {
     local prompt="$1" varname="$2" default="${3:-}"
     _read_line "$prompt" "$varname" "$default"
 }
-menu_pause() { echo ""; _read_line "  ${bnc}Нажми Enter для возврата в меню...${nc}" _; }
+menu_pause() { echo ""; _read_line "${bnc}    Нажмите Enter для возврата в меню...${nc}" _; }
 ########################
 ### Сетевые проверки ###
 ########################

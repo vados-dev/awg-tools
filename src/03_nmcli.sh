@@ -55,16 +55,32 @@ printf "\n    Поднимаю соединение $upname:${bgrn}\n%s\n${nc}" 
 # Deactivate the connection
 nmcli_down() {
 nmcli_show_conn
-ask "Погасить соединение:[${nc}${NMCLI_DEF_NAME}|n${bnc}]?" "" downname;
+ask "Погасить соединение: [${nc}${NMCLI_DEF_NAME}|n${bnc}]?" "" downname;
 [[ "$downname" == "n" ]] && return 0;
 [[ -z "$downname" ]] && downname="$NMCLI_DEF_NAME"
 _down=$(nmcli -c yes con down ${downname} | awk '{print "    " $0}')
 printf "\n    Гашу соединение $downname:${bred}\n%s\n${nc}" "${_down}";
 }
 
+nm_restart() {
+_nm_restart="$(systemctl restart NetworkManager.service | awk '{print "    " $0}')"
+printf "\n    Перезапуск NetworkManager:${bgrn}%s\n${nc}" ${_nm_restart};
+}
+
+# add connection to zone
+nmcli_add2zone() {
+ask "Добавить соединение ${NMCLI_DEF_NAME} в зону: [${nc}${NMCLI_DEF_ZONE}|n${bnc}]?" "${NMCLI_DEF_ZONE}" zonename;
+[[ "$zonename" == "n" ]] && return 0;
+[[ -z "$zonename" ]] && zonename=${NMCLI_DEF_ZONE}
+_add2zone=$(nmcli -c yes con modify ${NMCLI_DEF_NAME} connection.zone ${zonename} | awk '{print "    " $0}')
+printf "\n    Добавляю соединение ${NMCLI_DEF_NAME}:${bgrn}\n%s\n${nc}" "${_add2zone}";
+nm_restart
+fw_restart
+}
+
 nmcli_menu() {
-    declare mItems=("Просмотр соединений" "Просмотр девайсов" "Просмотр Окружения" "Импорт соединения" "Создать соединение" "Удалить соединение" "Поднять соединение" "Погасить соединение")
-    declare mActions=("nmcli_show_conn" "nmcli_show_devices" "nmcli_show_env" "nmcli_import_con" "nmcli_create_con" "nmcli_remove_con" "nmcli_up" "nmcli_down")
+    declare mItems=("Просмотр соединений" "Просмотр девайсов" "Просмотр Окружения" "Импорт соединения" "Создать соединение" "Удалить соединение" "Поднять соединение" "Погасить соединение" "Добавить соединение в зону")
+    declare mActions=("nmcli_show_conn" "nmcli_show_devices" "nmcli_show_env" "nmcli_import_con" "nmcli_create_con" "nmcli_remove_con" "nmcli_up" "nmcli_down" "nmcli_add2zone")
     declare mTitle="NetworkManager"
     declare mDescr=""
     declare mType="section"
