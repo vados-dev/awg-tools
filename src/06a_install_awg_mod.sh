@@ -95,28 +95,7 @@ mod_awg_install() {
     rm -rf "$TMP_DIR" > /dev/null 2>&1 && log "Папка ${TMP_DIR} удалена." || log_error "Ошибка удаления ${TMP_DIR}!"
 }
 
-#mod_awg_get_url() {
-#    local vadUrl="https://github.com/vados-dev/amneziawg-linux-kernel-module.git"
-#    local amnUrl="https://github.com/amnezia-vpn/amneziawg-linux-kernel-module.git"
-#    local advUrl="https://github.com/AdvancedWG/amneziawg-linux-kernel-module-awg.git"
-#    while true; do
-#        echo -e "${bgrn}1${bnc}) vados-dev"
-#        echo -e "${bnc}2${bnc}) amnezia-vpn"
-#        echo -e "${bnc}3${bnc}) advancedWG"
-#        echo -e ""
-#        echo -e "${byel}0${bnc}) Назад"
-#        echo -e "${magb}[ Enter ]${bnc} Назад"
-#        echo ""
-#        eli_read_choice choice
-#        case "$choice" in
-#            1) mod_awg_install "$vadUrl" && return 0 || print_warn "Ошибка при настройке" ;;
-#            2) mod_awg_install "$amnUrl" && return 0 || print_warn "Ошибка при показе статуса" ;;
-#            3) mod_awg_install "$advUrl" && return 0 || print_warn "Ошибка при тесте" ;;
-#            0) return 0 ;;
-#            *) print_warn "Введите число от 0 до 4" ;;
-#        esac
-#    done
-#}
+
 mod_awg_remove() {
     sudo dkms remove "amneziawg/$(dkms status | grep amneziawg | awk -F'[/, ]+' '{print $2}' | head -1)" --all
     del_awg_from_modules
@@ -141,3 +120,13 @@ menu_install_awg_mod() {
     declare mType="section"
     show_menu
 }
+
+
+#menu_mod_awg_version() {
+#    declare mItems=("Выбор версии модуля" "Установка модуля amneziawg" "Переустановка/обновление модуля amneziawg" "Удаление модуля amneziawg" "Добавить в автозагрузку модуль amneziawg" "Удалить из автозагрузки модуль amneziawg" "Добавить в автозагрузку модуль wireguard" "Удалить из автозагрузки модуль wireguard")
+#    declare mActions=("menu_mod_awg_get_version" "mod_awg_install" "mod_awg_reinstall" "mod_awg_remove" "add_awg_to_modules" "del_awg_from_modules" "add_wg_to_modules" "del_wg_from_modules")
+#    declare mTitle="Выбор версии модуля ядра amneziawg"
+#    declare mDescr=""
+#    declare mType="section"
+#    show_menu
+#}
