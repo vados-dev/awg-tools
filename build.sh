@@ -3,6 +3,7 @@
 # - собирает модули из src/ в один файл ${dir_name}.sh -
 # - порядок файлов важен: header первый, entry последний -
 
+
 SELF="$(readlink -f "${BASH_SOURCE[0]}")"
 #export PATH="${SELF%/*}:$PATH"
 cur_dir=${SELF%/*}
@@ -15,13 +16,14 @@ SRC_DIR=${cur_dir}/src
 ### Подключаем env: ###
 #######################
 source ${PROJ_ENV:-${PROJ_ROOT}/.${dir_name}-env}
-
-echo "cur_dir=$cur_dir"
-echo "dir_name=$dir_name"
-echo "PROJ_ROOT=$PROJ_ROOT"
-echo
-echo "me_ext=$me_ext"
-echo "me=$me"
+source ${PROJ_ENV:-${PROJ_ROOT}/.${dir_name}-colors}
+#echo "cur_dir=$cur_dir"
+#echo "dir_name=$dir_name"
+#echo "PROJ_ROOT=$PROJ_ROOT"
+#echo
+#echo "me_ext=$me_ext"
+#echo "me=$me"
+#echo $sym_door
 #exit 0
 
 OUT_FILE="${PROJ_ROOT}/bin/${dir_name}.sh"
