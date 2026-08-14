@@ -59,7 +59,7 @@ if [[ "$auto" != "yes" ]]; then
     return 0
 else
     on_auto=$(nmcli connection modify ${upname} connection.autoconnect yes | awk '{print "    " $0}')
-    local priority=10
+    local -i priority=-905
     priority_auto=$(nmcli connection modify ${upname} connection.autoconnect-priority ${priority} | awk '{print "    " $0}')
     local retries=15
     retries_auto=$(nmcli connection modify ${upname} connection.autoconnect-retries ${retries} | awk '{print "    " $0}')
