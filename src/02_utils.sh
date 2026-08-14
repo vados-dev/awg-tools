@@ -181,6 +181,47 @@ SYSEOF
     fi
 }
 
+optimize_swap() {
+    log "Optimizing swap..."
+    local target_swap_mb
+    if [[ $TOTAL_RAM_MB -le 2048 ]]; then
+        target_swap_mb=1024
+    else
+        target_swap_mb=512
+    fi
+    # Check current swap
+    local current_swap_mb
+    current_swap_mb=$(free -m | awk '/Swap:/ {print $2}')
+    if [[ $current_swap_mb -ge $target_swap_mb ]]; then
+        log "Swap is already sufficient: ${current_swap_mb}MB (target: ${target_swap_mb}MB)"
+    else
+        log "Creating swap file: ${target_swap_mb}MB"
+        # Disable existing swap file if present
+        if [[ -f /swapfile ]]; then
+            swapoff /swapfile 2>/dev/null
+            rm -f /swapfile
+        fi
+        dd if=/dev/zero of=/swapfile bs=1M count="$target_swap_mb" status=none 2>/dev/null || {
+            log_warn "Error creating swap file"
+            return 1
+        }
+        chmod 600 /swapfile
+        mkswap /swapfile >/dev/null 2>&1 || { log_warn "mkswap error"; return 1; }
+        swapon /swapfile || { log_warn "swapon error"; return 1; }
+        # Add to fstab if missing. Precise field match: ignore commented
+        # lines and partial matches (e.g. `/swapfile.bak` or an old entry
+        # left in a comment).
+        if ! awk '!/^[[:space:]]*#/ && $1 == "/swapfile" && $3 == "swap" {found=1} END {exit !(found+0)}' \
+             /etc/fstab; then
+            echo '/swapfile none swap sw 0 0' >> /etc/fstab
+        fi
+        log "Swap file created: ${target_swap_mb}MB"
+    fi
+    # Setting swappiness
+    sysctl -w vm.swappiness=10 >/dev/null 2>&1
+}
+
+
 awg_optimize_nic() {
     log "Оптимизация сетевого интерфейса"
     if [[ -z "$ifext" ]]; then
@@ -200,8 +241,8 @@ awg_optimize_nic() {
 }
 
 menu_awg_optimize() {
-    declare mItems=("Подавление kernel warning/notice" "Настройка Адаптивных буферов" "Настройка IP Forwarding и TCP/IP Hardening" "Настройка BBR, Conntrack и Security" "Настройка минимального sysctl" "Оптимизация сетевого интерфейса")
-    declare mActions=("awg_optimize_sysctl_kernel_printk" "awg_optimize_sysctl_buffers" "awg_optimize_sysctl_ip_tcpip" "awg_optimize_sysctl_ip_tcp" "awg_optimize_sysctl_minimal" "awg_optimize_nic")
+    declare mItems=("Подавление kernel warning/notice" "Настройка Адаптивных буферов" "Настройка IP Forwarding и TCP/IP Hardening" "Настройка BBR, Conntrack и Security" "Настройка минимального sysctl" "Оптимизация swap" "Оптимизация сетевого интерфейса")
+    declare mActions=("awg_optimize_sysctl_kernel_printk" "awg_optimize_sysctl_buffers" "awg_optimize_sysctl_ip_tcpip" "awg_optimize_sysctl_ip_tcp" "awg_optimize_sysctl_minimal" "optimize_swap" "awg_optimize_nic")
     declare mTitle="AWG оптимизация"
     declare mDescr=""
     declare mType="section"
