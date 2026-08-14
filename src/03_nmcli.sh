@@ -13,6 +13,8 @@ ask "Импортировать конфиг из файла:[${nc}${NMCLI_DEF_C
 [[ -z "$iconf" ]] && iconf="$NMCLI_DEF_CONF"
 _imp=$(nmcli c import type amneziawg file ${iconf} | awk '{print "    " $0}')
 printf "\n    Импорт конфига $iconf:${byel}\n%s\n${nc}" "${_imp}";
+nmcli_add2zone
+nmcli_up
 }
 
 nmcli_create_con() {
@@ -51,9 +53,20 @@ ask "  Поднять соединение:[${nc}${NMCLI_DEF_NAME}|n${bnc}]?" ""
 _up=$(nmcli -c yes con up ${upname} | awk '{print "    " $0}')
 printf "\n    Поднимаю соединение $upname:${bgrn}\n%s\n${nc}" "${_up}";
 local auto=""
-on_auto=$(nmcli connection modify ${upname} connection.autoconnect yes | awk '{print "    " $0}')
+
 ask_yn "  Добавить соединение ${byel}${upname}${bnc} в автозагрузку?" "y" auto
-[[ "$auto" != "yes" ]] && return 0 || printf "\n    Соединение $upname:${bgrn} %s\n${nc}" "добавлено в автозагрузку $on_auto";
+if [[ "$auto" != "yes" ]]; then
+    return 0
+else
+    on_auto=$(nmcli connection modify ${upname} connection.autoconnect yes | awk '{print "    " $0}')
+    local priority=10
+    priority_auto=$(nmcli connection modify ${upname} connection.autoconnect-priority ${priority} | awk '{print "    " $0}')
+    local retries=15
+    retries_auto=$(nmcli connection modify ${upname} connection.autoconnect-retries ${retries} | awk '{print "    " $0}')
+    printf "\n    Соединение $upname:${bgrn} %s\n${nc}" "добавлено в автозагрузку $on_auto";
+    printf "\n    Для соединения $upname, выставлен приоритет:${bgrn}%d %s\n${nc}" ${priority} "$priority_auto";
+    printf "\n    Для соединения $upname, установлено ${bgrn}%d неудачных попыток подключения %s\n${nc}" ${retries} "$retries_auto";
+fi
 }
 
 # Deactivate the connection
@@ -70,25 +83,41 @@ printf "\n    Соединение $downname:${bred} %s\n${nc}" "удалено 
 
 nm_restart() {
 _nm_restart="$(systemctl restart NetworkManager.service | awk '{print "    " $0}')"
-printf "\n    Перезапуск NetworkManager:${bgrn}%s\n${nc}" ${_nm_restart};
+printf "\n    Перезапуск NetworkManager:${bgrn} %s\n${nc}" ${_nm_restart};
 }
 
 # add connection to zone
 nmcli_add2zone() {
-ask "    Добавить соединение ${NMCLI_DEF_NAME} в зону: [${nc}${NMCLI_DEF_ZONE}|n${bnc}]?" "${NMCLI_DEF_ZONE}" zonename;
-[[ "$zonename" == "n" ]] && return 0;
-[[ -z "$zonename" ]] && zonename=${NMCLI_DEF_ZONE}
-_add2zone=$(nmcli -c yes con modify ${NMCLI_DEF_NAME} connection.zone ${zonename} | awk '{print "    " $0}')
-printf "\n    Добавляю соединение ${NMCLI_DEF_NAME}:${bgrn}\n%s\n${nc}" "${_add2zone}";
+ask "    Добавить соединение ${NMCLI_DEF_NAME} в зону: [${nc}${NMCLI_DEF_ZONE}|n${bnc}]?" "${NMCLI_DEF_ZONE}" add2zone;
+[[ "$add2zone" == "n" ]] && return 0;
+[[ -z "$zonename" ]] && add2zone=${NMCLI_DEF_ZONE}
+_add2zone=$(nmcli -c yes con modify ${NMCLI_DEF_NAME} connection.zone ${add2zone} | awk '{print "    " $0}')
+printf "\n    Добавляю соединение ${NMCLI_DEF_NAME}:${bgrn} %s\n${nc}" "${_add2zone}";
 nm_restart
 fw_restart
+nmcli_up
+}
+
+# remove connection from zone
+nmcli_delFromZone() {
+ask_yn "  Удалить соединение ${byel}${NMCLI_DEF_NAME}${bnc} из зоны: [${nc}${NMCLI_DEF_ZONE}?" "y" delzone
+if [[ "$delzone" != "yes" ]]; then
+    return 0
+else
+_delzone=$(nmcli -c yes con modify ${NMCLI_DEF_NAME} connection.zone "" | awk '{print "    " $0}')
+printf "\n    Удаляю соединение ${NMCLI_DEF_NAME} из зоны ${bred} %s\n${nc}" "${_delzone}";
+nm_restart
+fw_restart
+nmcli_up
+fi
 }
 
 nmcli_menu() {
-    declare mItems=("Просмотр соединений" "Просмотр девайсов" "nmtui" "Импорт соединения" "Создать соединение" "Удалить соединение" "Поднять соединение" "Погасить соединение" "Добавить соединение в зону" "Просмотр Окружения")
-    declare mActions=("nmcli_show_conn" "nmcli_show_devices" "nmtui" "nmcli_import_con" "nmcli_create_con" "nmcli_remove_con" "nmcli_up" "nmcli_down" "nmcli_add2zone" "nmcli_show_env")
+    declare mItems=("Просмотр соединений" "Просмотр девайсов" "nmtui" "Импорт соединения" "Создать соединение" "Удалить соединение" "Поднять соединение" "Погасить соединение" "Добавить соединение в зону" "Удалить соединение из зоны" "Просмотр Окружения")
+    declare mActions=("nmcli_show_conn" "nmcli_show_devices" "nmtui" "nmcli_import_con" "nmcli_create_con" "nmcli_remove_con" "nmcli_up" "nmcli_down" "nmcli_add2zone" "nmcli_delFromZone" "nmcli_show_env")
     declare mTitle="NetworkManager"
     declare mDescr=""
     declare mType="section"
     show_menu
 }
+
