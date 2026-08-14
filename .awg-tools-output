@@ -192,7 +192,7 @@ show_menu() {
             exit 0
         fi
 
-        if [[ "$choice" =~ ^[1-9]+$ ]] && (( choice >= 1 && choice <= ${#mActions[@]} )); then
+        if [[ "$choice" =~ ^[0-9]+$ ]] && (( choice >= 1 && choice <= ${#mActions[@]} )); then
             "${mActions[choice - 1]}"
             if [[ "$mType" == "section" ]]; then
                 menu_pause

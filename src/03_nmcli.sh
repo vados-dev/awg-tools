@@ -45,21 +45,27 @@ printf "\n    Удаление соединения $rmname:${bred}\n%s\n${nc}" 
 # Activate the connection
 nmcli_up() {
 nmcli_show_conn
-ask "Поднять соединение:[${nc}${NMCLI_DEF_NAME}|n${bnc}]?" "" upname;
+ask "  Поднять соединение:[${nc}${NMCLI_DEF_NAME}|n${bnc}]?" "" upname;
 [[ "$upname" == "n" ]] && return 0;
 [[ -z "$upname" ]] && upname="$NMCLI_DEF_NAME"
 _up=$(nmcli -c yes con up ${upname} | awk '{print "    " $0}')
 printf "\n    Поднимаю соединение $upname:${bgrn}\n%s\n${nc}" "${_up}";
+local auto=""
+on_auto=$(nmcli connection modify ${upname} connection.autoconnect yes | awk '{print "    " $0}')
+ask_yn "  Добавить соединение ${byel}${upname}${bnc} в автозагрузку?" "y" auto
+[[ "$auto" != "yes" ]] && return 0 || printf "\n    Соединение $upname:${bgrn} %s\n${nc}" "добавлено в автозагрузку $on_auto";
 }
 
 # Deactivate the connection
 nmcli_down() {
 nmcli_show_conn
-ask "Погасить соединение: [${nc}${NMCLI_DEF_NAME}|n${bnc}]?" "" downname;
+ask "  Погасить соединение: [${nc}${NMCLI_DEF_NAME}|n${bnc}]?" "" downname;
 [[ "$downname" == "n" ]] && return 0;
 [[ -z "$downname" ]] && downname="$NMCLI_DEF_NAME"
 _down=$(nmcli -c yes con down ${downname} | awk '{print "    " $0}')
 printf "\n    Гашу соединение $downname:${bred}\n%s\n${nc}" "${_down}";
+off_auto=$(nmcli connection modify ${downname} connection.autoconnect no | awk '{print "    " $0}')
+printf "\n    Соединение $downname:${bred} %s\n${nc}" "удалено из автозагрузки $off_auto";
 }
 
 nm_restart() {
@@ -69,7 +75,7 @@ printf "\n    Перезапуск NetworkManager:${bgrn}%s\n${nc}" ${_nm_restar
 
 # add connection to zone
 nmcli_add2zone() {
-ask "Добавить соединение ${NMCLI_DEF_NAME} в зону: [${nc}${NMCLI_DEF_ZONE}|n${bnc}]?" "${NMCLI_DEF_ZONE}" zonename;
+ask "    Добавить соединение ${NMCLI_DEF_NAME} в зону: [${nc}${NMCLI_DEF_ZONE}|n${bnc}]?" "${NMCLI_DEF_ZONE}" zonename;
 [[ "$zonename" == "n" ]] && return 0;
 [[ -z "$zonename" ]] && zonename=${NMCLI_DEF_ZONE}
 _add2zone=$(nmcli -c yes con modify ${NMCLI_DEF_NAME} connection.zone ${zonename} | awk '{print "    " $0}')
@@ -79,8 +85,8 @@ fw_restart
 }
 
 nmcli_menu() {
-    declare mItems=("Просмотр соединений" "Просмотр девайсов" "Просмотр Окружения" "Импорт соединения" "Создать соединение" "Удалить соединение" "Поднять соединение" "Погасить соединение" "Добавить соединение в зону")
-    declare mActions=("nmcli_show_conn" "nmcli_show_devices" "nmcli_show_env" "nmcli_import_con" "nmcli_create_con" "nmcli_remove_con" "nmcli_up" "nmcli_down" "nmcli_add2zone")
+    declare mItems=("Просмотр соединений" "Просмотр девайсов" "nmtui" "Импорт соединения" "Создать соединение" "Удалить соединение" "Поднять соединение" "Погасить соединение" "Добавить соединение в зону" "Просмотр Окружения")
+    declare mActions=("nmcli_show_conn" "nmcli_show_devices" "nmtui" "nmcli_import_con" "nmcli_create_con" "nmcli_remove_con" "nmcli_up" "nmcli_down" "nmcli_add2zone" "nmcli_show_env")
     declare mTitle="NetworkManager"
     declare mDescr=""
     declare mType="section"

@@ -127,7 +127,6 @@ ask() {
 
 ask_yn() {
     local prompt="$1" default="$2" varname="$3" value="" p
-
     while true; do
         if [[ "$default" == "y" ]]; then
             p=$(printf '  %b%s%b [Y/n]: ' "${bnc}" "$prompt" "${nc}")
