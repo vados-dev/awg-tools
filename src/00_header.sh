@@ -22,22 +22,20 @@ fi
 #set +o allexport
 
 # Подключаем .[...]-env
-SELF="$(readlink -f "${BASH_SOURCE[0]}")"
-#export PATH="${SELF%/*}:$PATH"
+SELF="$(readlink -f "${BASH_SOURCE[0]}")" #export PATH="${SELF%/*}:$PATH"
 cur_dir=${SELF%/*}
-#dir_name=${cur_dir##*/}
+dir_name=${cur_dir##*/}
+PROJ_ENV=${cur_dir%/*}
 me_ext=$(basename "$0")
 me="${me_ext%.*}"
 
-. /root/.${me}/.${me}-env
+. ${PROJ_ENV}/.${me}-env
 
-echo $me
-echo "cur_dir=$cur_dir"
-echo "dir_name=$dir_name"
+#echo $me; echo "cur_dir=$cur_dir"; echo "dir_name=$dir_name"; echo "PROJ_ENV=$PROJ_ENV"; exit 0
 
-. ${env_dir}/.${app_name}-colors
-. ${env_dir}/.${app_name}-output
-. ${env_dir}/.${app_name}-func
+. ${PROJ_ENV}/.${app_name}-colors
+. ${PROJ_ENV}/.${app_name}-output
+. ${PROJ_ENV}/.${app_name}-func
 
 # --> Функции "system_check" <--
 check_root() { if [ $(id -u) -ne 0 ]; then die "This script must be run as root."; fi }

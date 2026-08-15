@@ -1,0 +1,54 @@
+SELF="$(readlink -f "${BASH_SOURCE[0]}")" #export PATH="${SELF%/*}:$PATH"
+env_dir=${SELF%/*}
+dir_name=${env_dir##*/.}
+me_ext=$(basename "$0")
+me="${me_ext%.*}"
+ME_ROOT=${env_dir}/bin
+app_file=${me_ext}
+app_name=${dir_name:-"awg-tools"};
+version="0.0.1"
+code_name=${app_name}
+pr_name="AWG Tools"
+pr_descr="Менеджер AWG стека: AWG VPN на хосте: $(hostname)"
+pr_phrase="Хорошего дня!"
+pr_owner="vados-dev"
+repo_name=${dir_name}
+
+# Log
+DEFAULT_LOG="$ME_ROOT/logs/$app_name.log"
+SAVE_LOG=true
+
+# For colors
+COLS_NUM=78
+NO_COLOR=false;
+export WG_COLOR_MODE=always
+export AWG_COLOR_MODE=always
+
+# nmcli-env
+NMCLI_CONF_DIR="/etc/VPN/configs/tunnel/"
+NMCLI_DEF_NAME="awg2vds"
+NMCLI_DEF_CONF=${NMCLI_CONF_DIR}${NMCLI_DEF_NAME}.conf;
+NMCLI_DEF_ZONE="VPN-trusted"
+#NMCLI_ENDPOINT="222.222.222.222" #NMCLI_ENDPOINT_PORT="51820" #NMCLI_ALLOWED_IPS="0.0.0.0/0"
+
+# vpn-optimize-env
+AWG_OPTIMIZE_SYSCTL_DIR="${cur_dir}/sysctl.d"
+
+# install-env
+AWG_MODULE_GIT_URL="https://github.com/vados-dev/amneziawg-linux-kernel-module.git"
+AWG_MODULE_GIT_BRANCH="stable"
+#amnUrl="https://github.com/amnezia-vpn/amneziawg-linux-kernel-module.git"; amnBranch="master" #advUrl="https://github.com/AdvancedWG/amneziawg-linux-kernel-module-awg.git"; advBranch="master" #AWG_MODULE_VERSION="1.0.0" # firewalld-env
+
+# Альяс команды firewall-cmd #if [ "$fwcmd" = "" ] || [ ! "$fwcmd" ] || [ "$fwcmd" != $(which firewall-cmd) ]; then export fwcmd=$(which firewall-cmd); fi
+fwcmd=fw_fwcmd
+# Ещё альясы
+fwreload="${fwcmd} -rl"; fwperm="${fwcmd} -pmt"
+
+opt1="$1"; opt2="$2"; opt3="$3"; opt4="$4";
+# defs
+perm="--permanent"
+permap="--permanent"
+defzone="--zone=public"
+#zoneap="--zone=trusted" #ifap="ap0" #ap_iptsubn="10.3.141.0/24"; #noif="lo $ifap";
+# action
+#actn="add"; #if [ "$opt2" == "delete" ] || [ "$opt2" == "remove" ]; then actn="remove"; fi
