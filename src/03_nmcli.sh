@@ -13,6 +13,8 @@ ask "Импортировать конфиг из файла:[${nc}${NMCLI_DEF_C
 [[ -z "$iconf" ]] && iconf="$NMCLI_DEF_CONF"
 _imp=$(nmcli c import type amneziawg file ${iconf} | awk '{print "    " $0}')
 printf "\n    Импорт конфига $iconf:${byel}\n%s\n${nc}" "${_imp}";
+_conName=$(nmcli -c yes con modify ${NMCLI_DEF_NAME} connection.name ${NMCLI_DEF_NAME} | awk '{print "    " $0}')
+printf "\n    Применяю имя соединения ${NMCLI_DEF_NAME}:${bgrn} %s\n${nc}" "${_conName}";
 nmcli_add2zone
 nmcli_up
 }

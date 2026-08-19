@@ -88,8 +88,8 @@ mod_awg_install() {
     chmod 0700 "$TMP_DIR"
     git clone -b ${AWG_MODULE_GIT_BRANCH} "${AWG_MODULE_GIT_URL}" "${TMP_DIR}" 2>/dev/null; cd "${TMP_DIR}/src" 2>/dev/null && log "Репозиотрий клонирован." || log_error "Ошибка клона репозитория!"
 # local gitUrl="$1" #    rm -rf ./setup #    git clone ${gitUrl} ${AWG_MODULE_SETUP_DIR} # cd ${AWG_MODULE_SETUP_DIR}/src && \
-    sudo make dkms-install > /dev/null 2>&1 && log "\"sudo make dkms-install\" выполнено успешно." || log_error "Ошибка выполнения \"sudo make dkms-install\"!"
-    sudo dkms install "amneziawg/$(make print-version)" > /dev/null 2>&1 && log "Установка модуля ядра amneziawg успешно завершена." || log_error "Ошибка установки модуля ядра amneziawg!"
+    make dkms-install > /dev/null 2>&1 && log "\"sudo make dkms-install\" выполнено успешно." || log_error "Ошибка выполнения \"sudo make dkms-install\"!"
+    dkms install "amneziawg/$(make print-version)" > /dev/null 2>&1 && log "Установка модуля ядра amneziawg успешно завершена." || log_error "Ошибка установки модуля ядра amneziawg!"
 #    sudo dkms add -m amneziawg -v ${AWG_MODULE_VERSION} #    sudo dkms build -m amneziawg -v ${AWG_MODULE_VERSION} #    sudo dkms install -m amneziawg -v ${AWG_MODULE_VERSION}
     add_awg_to_modules
     rm -rf "$TMP_DIR" > /dev/null 2>&1 && log "Папка ${TMP_DIR} удалена." || log_error "Ошибка удаления ${TMP_DIR}!"
@@ -97,7 +97,7 @@ mod_awg_install() {
 
 
 mod_awg_remove() {
-    sudo dkms remove "amneziawg/$(dkms status | grep amneziawg | awk -F'[/, ]+' '{print $2}' | head -1)" --all
+    dkms remove "amneziawg/$(dkms status | grep amneziawg | awk -F'[/, ]+' '{print $2}' | head -1)" --all
     del_awg_from_modules
     del_wg_from_modules
 }
@@ -106,7 +106,7 @@ mod_awg_reinstall() {
     if ! dnf list installed "dkms" 2>/dev/null | grep -q "Installed Packages"; then
         install_deps
     fi
-    sudo dkms install "amneziawg/$(dkms status | grep amneziawg | awk -F'[/, ]+' '{print $2}' | head -1)" -k $(uname -r)
+    dkms install "amneziawg/$(dkms status | grep amneziawg | awk -F'[/, ]+' '{print $2}' | head -1)" -k $(uname -r)
 #    mod_awg_remove
 #    mod_awg_install
 }
