@@ -162,6 +162,9 @@ check_nm_awg_deps() {
 }
 
 install_nm_awg() {
+    local installed=$(dnf list installed | grep networkmanager-amneziawg | awk '{print $1}')
+    dnf remove -y $installed || true
+
     local nm_deps=()
     nm_deps=("NetworkManager-libnm intltool cmake rpm-build gcc-c++")
     check_nm_awg_deps $nm_deps > /dev/null 2>&1 || return 1
@@ -169,7 +172,7 @@ install_nm_awg() {
     TMP_DIR=$(mktemp -d -t install_nm_awg-XXXXXX)
     chmod 0700 "$TMP_DIR"
     git clone -b master "https://github.com/vovochka404/network-manager-amneziawg.git" "${TMP_DIR}" 2>/dev/null; cd "${TMP_DIR}" 2>/dev/null && log "Репозиотрий клонирован." || log_error "Ошибка клона репозитория!"
-#git fetch origin master #git pull origin master
+    #git fetch origin master #git pull origin master
     mkdir -p build && cd build > /dev/null 2>&1 && log "Папка $TMP_DIR/build создана." || log_error "Ошибка создания директории build!"
     # System installation (for RPM packages)
     cmake .. -DWITH_GTK3=OFF -DWITH_GTK4=OFF -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=lib64 2>&1 && log "Сборка прошла успешно." || log_error "Ошибка сборки \"cmake\"!"
