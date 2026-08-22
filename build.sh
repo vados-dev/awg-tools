@@ -42,6 +42,7 @@ FILES=(
     "06_install.sh"
     "06a_install_awg_mod.sh"
     "06b_install_utils.sh"
+    "06c_install_awg3.sh"
     "main.sh"
     "99_entry.sh"
 )

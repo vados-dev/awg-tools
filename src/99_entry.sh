@@ -3,5 +3,5 @@
 
 menu_main
 
-printf "    %s\n" "$dashes"
+#printf "    %s\n" "$dashes"
 

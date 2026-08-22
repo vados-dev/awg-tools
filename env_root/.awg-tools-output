@@ -18,6 +18,33 @@ print_active()      { printf "$2  $ESC[7m $1 $ESC[27m"; }
 get_cursor_row()    { IFS=';' read -sdR -p $'\E[6n' ROW COL; echo ${ROW#*[}; }
 get_cursor_col()    { IFS=';' read -sdR -p $'\E[6n' ROW COL; echo ${COL#*[}; }
 
+###########################
+### Функции логирования ###
+###########################
+log_msg() {
+    local type="$1";local msg="$2";
+    local ts=$(date '+%b %d %T');
+    local entry="[$ts] $type: $msg";
+    case "$type" in
+        Инфо)  printstr "${bblue}$type: ${bnc}$msg" "$sym_info" ;;
+        Ok)    printstr "${bgrn}$type: ${bnc}$msg" "$sym_ok" ;;
+        Внимание)  printstr "${byel}$type: ${bnc}$msg" "$sym_warn" ;;
+        Сохраню) printstr "${bgrn}$type${bnc} $msg" "$sym_ok" ;;
+        Удалю) printstr "${bred}$type${bnc} $msg" "$minus" ;;
+        Ошибка) printstr "${bred}$type: ${bnc}$msg" "$sym_err" >&2 ;;
+        Отладка) printstr "${bwh}$type: ${bnc}$msg" "$sym_dbg" >&2 ;;
+        *) app_title "Error" "$sym_err" ;;
+    esac
+
+    if [[ "${DEFAULT_LOG}" != "" ]] && [[ "${SAVE_LOG}" == true ]];then
+        local log="${DEFAULT_LOG}";
+        if ! mkdir -p "$(dirname "${log}")" || ! echo ${entry} >> "${log}"; then
+            printstr "Ошибка записи лога '${log}'. ${bred}ERROR:${nc} " "$entry" "$sym_err";
+            exit 1;
+        fi
+    fi
+}
+
 ######################
 ### Функции вывода ###
 ######################
@@ -38,21 +65,32 @@ printstr() {
     fi
 }
 
-log()       { log_msg "Инфо" "$1"; }
-log_ok()    { log_msg "Ok" "$1"; }
-log_warn()  { log_msg "Зацени" "$1"; }
-log_error() { log_msg "Ошибка" "$1"; }
-log_debug() { log_msg "Отладка" "$1"; }
-die()       { log_error "Сдохла: $1"; [[ "${DEFAULT_LOG}" != ""  ]] && ${SAVE_LOG}; log_error "Лог: $DEFAULT_LOG" && exit 1 || exit 1; }
+log()        { log_msg "Инфо" "$*"; }
+log_ok()     { log_msg "Ok" "$*"; }
+log_warn()   { log_msg "Внимание" "$*"; }
+log_save()   { log_msg "Сохраню" "$*"; }
+log_delete() { log_msg "Удалю" "$*"; }
+log_error()  { log_msg "Ошибка" "$*"; }
+log_debug()  { log_msg "Отладка" "$*"; }
+die()        { log_error "Сдохла: $*"; [[ "${DEFAULT_LOG}" != ""  ]] && ${SAVE_LOG}; log_error "Лог: $DEFAULT_LOG" && exit 1 || exit 1; }
 
-print_info()    { log "$1"; }
-print_ok()      { log_ok "$1"; }
-print_warn()    { log_warn "$1"; }
-print_err()     { log_error "$1"; }
+print_info()    { log "$*"; }
+print_ok()      { log_ok "$*"; }
+print_warn()    { log_warn "$*"; }
+print_save()    { log_save "$*"; }
+print_delete()  { log_delete "$*"; }
+print_err()     { log_error "$*"; }
 print_section() {
-    printf "\n  ${bmag} ${resh}${bnc}$1${nc}\n"
+    printf "\n  ${bmag} ${resh}${bnc}$*${nc}\n"
     printf "   ${bmag}${dashes}${nc}\n";
 }
+
+ok()   { cecho Gs √ $*; }
+err()  { log_error $*; }
+warn() { log_warn $*; }
+info() { log_info $*; }
+step() { print_section $*; }
+#step() { echo -e "\n${W}$*${N}\n${D}────────────────────────────────────────────────${N}"; }
 
 ################################
 ### Функция заполнения строк ###
@@ -189,6 +227,7 @@ show_menu() {
 
         if [[ "$choice" == "q" ]]; then
             printf "\n    ${bred}%s\n${nc}\n" "Выход."
+            rm -f $LOCKFILE
             exit 0
         fi
 
@@ -207,7 +246,6 @@ show_menu() {
             printf "\n${bmag}    Введите число от \"${byel}1${bmag}\" до \"${byel}%d${bmag}\".${backOrExit}${nc}\n\n" ${index}
             menu_pause
         fi
-
         awg_header
     done
 }
