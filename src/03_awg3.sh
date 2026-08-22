@@ -538,6 +538,11 @@ down_awg3_links() {
     done
 }
 
+awg3_run_cli() {
+    [[ -x "$AWG3_CLI_WRAPPER" ]] || { log_error "AWG3 не установлен — сначала пункт 1!"; return 1; }
+    "$AWG3_CLI_WRAPPER"
+}
+
 awg3_summary() {
     local version
     awg3_version="$(awk -F'"' '/^__version__/{print $2}' "${AWG3_SRC_DIR}/awg3/__init__.py" 2>/dev/null)"
@@ -670,9 +675,9 @@ echo -e ${nc}
 }
 
 # --> МЕНЮ: Установка вспомогательных утилит <--
-menu_install_awg3() {
-    declare mItems=("План установки (dry-run)" "Установить" "Самотест" "Обновить" "Удалить AWG3 с сервера")
-    declare mActions=("awg3_dry_run" "awg3_install" "awg3_self_test" "awg3_update" "awg3_uninstall")
+awg3_menu() {
+    declare mItems=("Управление" "План установки (dry-run)" "Установить" "Самотест" "Обновить" "Удалить AWG3 с сервера")
+    declare mActions=("awg3_run_cli" "awg3_dry_run" "awg3_install" "awg3_self_test" "awg3_update" "awg3_uninstall")
     declare mTitle="Установка AmneziaWG 3"
     declare mDescr="Описание установки AWG3\n"
     declare mType="section"

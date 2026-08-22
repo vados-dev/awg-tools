@@ -150,6 +150,7 @@ class Menu:
             f"AWG3_PORT={port}\n"
             f"AWG3_SUBNET={subnet}\n"
             f"AWG3_ADDRESS={address}\n"
+            f"AWG3_FW_ZONE={paths.FW_ZONE}\n"
             f"AWG3_ROUTE_TABLE={paths.ROUTE_TABLE}\n"
         )
         try:
@@ -236,7 +237,7 @@ class Menu:
             print(f"  {G}{index}{N}  {template.title:<24}{D}{template.description}{N}")
         print(f"  {G}{len(presets.TEMPLATES) + 1}{N}  {'Настроить вручную':<24}"
               f"{D}профиль, DNS, MTU{N}")
-        choice = ask("Выбор", "1")
+        choice = ask("Выбор", "2")
 
         if choice == str(len(presets.TEMPLATES) + 1):
             return None
@@ -1002,6 +1003,7 @@ class Menu:
         warn("будет удалено:")
         print(f"  {R}—{N} база {paths.DB_PATH} со всеми клиентами и ключами")
         print(f"  {R}—{N} конфиги клиентов в {paths.CLIENTS_DIR}")
+        print(f"  {R}—{N} правила iptables с тегом {paths.FW_ZONE}")
         print(f"  {R}—{N} правила iptables с тегом {paths.IPTABLES_TAG}")
         print(f"  {R}—{N} интерфейс будет остановлен")
         print(f"  {G}+{N} бинари в {paths.PREFIX} останутся — сносит install.sh --uninstall")

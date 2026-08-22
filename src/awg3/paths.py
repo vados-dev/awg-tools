@@ -46,9 +46,12 @@ DEFAULT_IFACE = "awg3master"
 # безусловный `ip route flush table 200` — берём другую.
 ROUTE_TABLE = int(os.environ.get("AWG3_ROUTE_TABLE", "210"))
 
+FW_POLICY = os.environ.get("AWG3_FW_POLICY", "GW-MASTER-to-world")
+FW_ZONE = os.environ.get("AWG3_FW_ZONE", "awg3master")
+
 # Тег для правил iptables. Удаление всегда адресное по комментарию,
 # никаких -F по цепочкам.
-IPTABLES_TAG = "awg3"
+IPTABLES_TAG = os.environ.get("AWG3_IPTABLES_TAG", "awg3")
 
 # Откуда обновляться. Копия установщика лежит рядом с проектом, но если её
 # нет (например, папку восстановили из бекапа), берём с GitHub.
@@ -56,7 +59,6 @@ IPTABLES_TAG = "awg3"
 REPO_URL = os.environ.get("AWG3_REPO", "https://github.com/vados-dev/awg-tools")
 REPO_BRANCH = os.environ.get("AWG3_BRANCH", "main")
 INSTALLER = PREFIX / "install.sh"
-
 
 def installer_raw_url() -> str:
     """Прямая ссылка на install.sh в репозитории."""

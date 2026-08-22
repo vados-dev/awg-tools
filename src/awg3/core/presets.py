@@ -26,6 +26,8 @@ DNS_PRESETS: tuple[DnsPreset, ...] = (
               "режет вредоносные домены"),
     DnsPreset("adguard", "AdGuard", "94.140.14.14, 94.140.15.15",
               "режет рекламу"),
+    DnsPreset("Custom", "Custom", "10.30.30.33, 8.8.4.4",
+              "преднастроенный"),
 )
 
 DEFAULT_DNS = DNS_PRESETS[0]
@@ -44,6 +46,8 @@ class MtuPreset:
 # при 1420 без обфускации, при ней уже не влезает. Фрагментированный трафик
 # и медленнее, и заметнее для DPI.
 MTU_PRESETS: tuple[MtuPreset, ...] = (
+    MtuPreset("1420", "1420", 1420, ""),
+    MtuPreset("1360", "1360", 1360, ""),
     MtuPreset("1320", "1320", 1320, ""),
     MtuPreset("1300", "1300", 1300, ""),
     MtuPreset("1280", "1280", 1280, ""),
@@ -69,11 +73,14 @@ TEMPLATES: tuple[SetupTemplate, ...] = (
     SetupTemplate(
         key="recommended",
         title="Рекомендуемый",
-        description="standard, AWG3, Cloudflare, MTU 1320",
+        description="standard, AWG3, Custom, MTU 1320",
         profile="standard",
         awg3=True,
-        dns=DEFAULT_DNS.value,
+        dns="10.30.30.33, 8.8.4.4",
         mtu=DEFAULT_MTU.value,
+        description="standard, AWG3, Cloudflare, MTU 1320",
+#        dns=DEFAULT_DNS.value,
+#        mtu=DEFAULT_MTU.value,
     ),
     SetupTemplate(
         key="stealth",
