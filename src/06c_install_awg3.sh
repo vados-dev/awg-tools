@@ -486,7 +486,7 @@ awg3_self_test() {
     step "Самотест моделей"
     local runner="python3"
     [[ -x "${AWG3_VENV_DIR}/bin/python" ]] && runner="${AWG3_VENV_DIR}/bin/python"
-    local tests_dir="$AWG3_SRC_DIR/awg3/tests"
+    local tests_dir="$AWG3_SRC_DIR/awg3"
     if [[ -f "${tests_dir}/test_models.py" ]]; then
         ( cd "$tests_dir" && "$runner" test_models.py ) ||
         { log_error "Cамотест провален — не ставь это в бой!"; return 1; }
