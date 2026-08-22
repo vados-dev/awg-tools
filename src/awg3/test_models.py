@@ -1,7 +1,7 @@
 """Проверка инвариантов — без сети и без root."""
 import sys; sys.path.insert(0, '.')
-from awg3.core import wgkeys, models as m
-from awg3.core.models import Range, ObfParams, AWG3Params, Peer, ServerConfig
+from core import wgkeys, models as m
+from core.models import Range, ObfParams, AWG3Params, Peer, ServerConfig
 
 fails = []
 def check(name, cond):

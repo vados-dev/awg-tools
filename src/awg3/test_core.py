@@ -1,12 +1,12 @@
 """Тесты хранилища, профилей и экспорта. Без root, без сети."""
 import os, sys, tempfile, pathlib
 _TD = tempfile.mkdtemp()
-os.environ.update(AWG3_CONF_DIR=_TD+"/etc", AWG3_LOG=_TD+"/awg3.log",
-                  AWG3_PREFIX=_TD+"/opt", AWG3_BACKUP_DIR=_TD+"/bak")
+os.environ.update(AWG3_CONF_DIR=_TD+"/etc/VPN/configs/awg3", AWG3_LOG=_TD+"/awg3.log",
+                  AWG3_PREFIX=_TD+"/etc/VPN/helpers/awg3", AWG3_BACKUP_DIR=_TD+"/bak")
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from awg3.core import export, profiles, wgkeys
-from awg3.core.storage import ServerRow, Storage, StorageError
+from core import export, profiles, wgkeys
+from core.storage import ServerRow, Storage, StorageError
 
 fails = []
 def check(name, cond):
@@ -15,7 +15,7 @@ def check(name, cond):
 
 def _server_row(**kw):
     obf = kw.pop("obf"); a3 = kw.pop("awg3"); priv = kw.pop("priv")
-    return ServerRow(iface="awg1", private_key=priv, public_key=wgkeys.public_key(priv),
+    return ServerRow(iface="awg3master", private_key=priv, public_key=wgkeys.public_key(priv),
         listen_port=50004, address="10.200.0.1/24", subnet="10.200.0.0/24", mtu=1420,
         endpoint_host="203.0.113.10", dns="1.1.1.1", profile="standard",
         obf={"jc":obf.jc,"jmin":obf.jmin,"jmax":obf.jmax,"s1":obf.s1,"s2":obf.s2,
