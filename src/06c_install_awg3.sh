@@ -77,9 +77,9 @@ awg3_preflight() {
         local prev_port prev_subnet
         prev_port="$(awk -F= '/^AWG3_PORT=/{print $2}' "$AWG3_RESERVED_ENV")"
         prev_subnet="$(awk -F= '/^AWG3_SUBNET=/{print $2}' "$AWG3_RESERVED_ENV")"
-        log_ok "переустановка: сохраняю прежний резерв"
-        log "порт ${prev_port}, подсеть ${prev_subnet}"
-        log "сбросить резерв: rm ${AWG3_RESERVED_ENV}"
+        log "Переустановка: сохраняю прежний резерв."
+        log "Порт ${prev_port}, подсеть ${prev_subnet}."
+        log "Сбросить резерв: rm ${AWG3_RESERVED_ENV}."
         return 0
     fi
     local awg2_port="" awg2_addr="" awg2_net=""
@@ -88,15 +88,15 @@ awg3_preflight() {
         awg2_addr="$(awg2_field "$AWG2_CONF" Address)"
         awg2_net="$(cidr_network "$awg2_addr")"
         log_ok "AWG 2.0 найден: ${AWG2_CONF}"
-        [[ -n "$awg2_port" ]] && info "его порт   : ${awg2_port} (не займём)"
-        [[ -n "$awg2_net"  ]] && info "его подсеть: ${awg2_net}/24 (обойдём)"
+        [[ -n "$awg2_port" ]] && log "Его порт   : ${awg2_port} (не займём)."
+        [[ -n "$awg2_net"  ]] && log "Его подсеть: ${awg2_net}/24 (обойдём)."
     else
-        log "AWG 2.0 не найден — ставимся на чистый сервер"
+        log "AWG 2.0 не найден — ставимся на чистый сервер."
     fi
     if [[ -d /sys/module/amneziawg ]]; then
-        log_warn "загружен kernel-модуль amneziawg — это штатно, мы его не трогаем"
-        log "именно поэтому AWG3 не пользуется awg-quick: при модуле он поднял бы"
-        log "kernel-интерфейс вместо нашего userspace-демона"
+        log_warn "Загружен kernel-модуль amneziawg — это штатно, мы его не трогаем."
+        log "Именно поэтому AWG3 не пользуется awg-quick: при модуле он поднял бы."
+        log "Kernel-интерфейс вместо нашего userspace-демона."
     fi
     local our_port our_net
     our_port="$(pick_port "$awg2_port")"
@@ -110,6 +110,7 @@ AWG3_IFACE=awg3
 AWG3_PORT=${our_port}
 AWG3_SUBNET=${our_net}/24
 AWG3_ADDRESS=${our_net%.0}.1/24
+AWG3_FW_ZONE=${AWG3_FW_ZONE}
 AWG3_ROUTE_TABLE=${AWG3_ROUTE_TABLE}
 AWG2_PORT_SEEN=${awg2_port:-none}
 AWG2_SUBNET_SEEN=${awg2_net:-none}
@@ -359,8 +360,8 @@ awg3_build_backend() {
     step "Сборка amneziawg-go"
     [[ -d "$AWG3_BUILD_DIR" ]] || { die "Нет исходников — сначала fetch_sources!"; }
     command -v make >/dev/null 2>&1 || {
-        log_error "make не найден — сборка невозможна"
-        log_error "поставь: apt-get install -y make"
+        log_error "make не найден — сборка невозможна."
+        log_error "Поставь: apt-get install -y make."
         exit 1
     }
     ( cd "$AWG3_BUILD_DIR" && PATH="$(dirname "$GO_BIN"):$PATH" make >/dev/null ) ||
@@ -431,7 +432,7 @@ print(format_report(probe_uapi_keys()))
 ' "\$@"
 EOF
     chmod 0755 "$AWG3_PROBE_WRAPPER"
-    log_ok "команда probe -> ${AWG3_PROBE_WRAPPER}"
+    log_ok "Команда probe -> ${AWG3_PROBE_WRAPPER}."
     cat >"$AWG3_CLI_WRAPPER" <<EOF
 #!/usr/bin/env bash
 # Интерактивное меню управления AWG3.
