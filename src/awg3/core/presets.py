@@ -30,7 +30,7 @@ DNS_PRESETS: tuple[DnsPreset, ...] = (
               "преднастроенный"),
 )
 
-DEFAULT_DNS = DNS_PRESETS[0]
+DEFAULT_DNS = DNS_PRESETS[4]
 
 
 @dataclass(frozen=True, slots=True)
@@ -53,7 +53,7 @@ MTU_PRESETS: tuple[MtuPreset, ...] = (
     MtuPreset("1280", "1280", 1280, ""),
 )
 
-DEFAULT_MTU = MTU_PRESETS[0]
+DEFAULT_MTU = MTU_PRESETS[3]
 
 
 @dataclass(frozen=True, slots=True)
@@ -101,6 +101,7 @@ TEMPLATES: tuple[SetupTemplate, ...] = (
     ),
 )
 
+DEFAULT_TEMPLATE = TEMPLATES[1]
 
 def template_by_key(key: str) -> SetupTemplate | None:
     for template in TEMPLATES:

@@ -146,7 +146,7 @@ class Menu:
         target = paths.CONF_DIR / "reserved.env"
         content = (
             "# Обновлено при создании сервера.\n"
-            f"AWG3_ENDPOINT={value}\n"
+            f"AWG3_ENDPOINT={endpoint}\n"
             f"AWG3_PORT={port}\n"
             f"AWG3_IFACE={iface}\n"
             f"AWG3_SUBNET={subnet}\n"
@@ -306,8 +306,10 @@ class Menu:
                 return
 
         reserved = self._reserved()
+        endpoint = reserved.get("AWG3_ENDPOINT", paths.DEFAULT_ENDPOINT)
         iface = reserved.get("AWG3_IFACE", paths.DEFAULT_IFACE)
         port_default = reserved.get("AWG3_PORT", "51820")
+
 
         # Подсеть выбираем заново, а не берём из reserved.env: пересоздание
         # сервера — это новая генерация всего, и оставлять прежнюю сеть
