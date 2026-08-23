@@ -41,6 +41,7 @@ BACKUP_DIR = _env_path("AWG3_BACKUP_DIR", str(Path.home() / "awg3_backup"))
 # выбирает установщик случайно из 10.33-10.188 и кладёт в reserved.env.
 DEFAULT_CLIENT_NET = "10.31.31.0/24"
 DEFAULT_IFACE = "awg3master"
+ipaddress = os.environ.get("AWG3_ADDRESS", "10.31.31.1")
 
 # Таблица policy-routing. AWG 2.0 использует 200 и делает по ней
 # безусловный `ip route flush table 200` — берём другую.

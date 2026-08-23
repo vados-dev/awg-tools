@@ -1,4 +1,11 @@
-# --> Функции подменю "Установка модуля ядра amneziawg" <--
+# --> Функции подменю "Установка" <--
+
+check_and_install_updates() {
+    log "Checking for system updates..."
+    dnf check-update -y || true
+    log "Installing system updates..."
+    dnf update -y || true
+}
 
 install_deps() {
 #    dnf update -y || true
@@ -121,6 +128,16 @@ menu_install_awg_mod() {
     show_menu
 }
 
+
+# --> МЕНЮ: Установка <--
+menu_install() {
+    declare mItems=("Проверка и обновление системы" "Базовая установка" "Установка модуля ядра amneziawg" "Установка вспомогательных утилит" "Установка AWG3")
+    declare mActions=("check_and_install_updates" "basic_install" "menu_install_awg_mod" "menu_install_utils" "menu_install_awg3")
+    declare mTitle="Установка"
+    declare mDescr=""
+    declare mType="section"
+    show_menu
+}
 
 #menu_mod_awg_version() {
 #    declare mItems=("Выбор версии модуля" "Установка модуля amneziawg" "Переустановка/обновление модуля amneziawg" "Удаление модуля amneziawg" "Добавить в автозагрузку модуль amneziawg" "Удалить из автозагрузки модуль amneziawg" "Добавить в автозагрузку модуль wireguard" "Удалить из автозагрузки модуль wireguard")

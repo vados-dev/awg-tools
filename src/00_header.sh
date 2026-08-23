@@ -13,12 +13,18 @@ if [ -z "$BASH_VERSION" ]; then
     exit 1
 fi
 
-set -o pipefail
+# -E нужен, чтобы ERR-ловушка отката работала и внутри функций.
+set -Eeuo pipefail
 
+#set -o pipefail
 #set -o allexport
 #export $(grep -v '^#' .env | xargs)
 #set +o allexport
 
+# readlink -f обязателен: скрипт вызывается через симлинк /usr/local/sbin/awg3,
+# и без разыменования SCRIPT_DIR указал бы на /usr/local/sbin — каталог, где
+# нет ни одного клиента.
+#SCRIPT_DIR="$(cd -- "$(dirname -- "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
 # Подключаем .[...]-env
 SELF="$(readlink -f "${BASH_SOURCE[0]}")" #export PATH="${SELF%/*}:$PATH"
 cur_dir=${SELF%/*}
