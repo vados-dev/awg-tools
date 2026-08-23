@@ -146,7 +146,7 @@ class Menu:
         target = paths.CONF_DIR / "reserved.env"
         content = (
             "# Обновлено при создании сервера.\n"
-            f"AWG3_ENDPOINT={endpoint}\n"
+            f"AWG3_ENDPOINT={value}\n"
             f"AWG3_PORT={port}\n"
             f"AWG3_IFACE={iface}\n"
             f"AWG3_SUBNET={subnet}\n"
@@ -219,7 +219,7 @@ class Menu:
         for index, (_, title) in enumerate(choices, start=1):
             print(f"  {G}{index}{N}  {title}")
         print(f"  {G}{len(choices) + 1}{N}  Без мимикрии {D}(только Jc){N}")
-        answer = ask("Выбор", "2")
+        answer = ask("Выбор", "1")
         if answer == str(len(choices) + 1):
             return None, cps.TagSet.EXTENDED
         try:
