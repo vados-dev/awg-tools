@@ -94,7 +94,7 @@ awg3_add_reserv() {
     print_ok "Порт: ${AWG3_NEW_PORT}"
 
     # - интерфейс туннеля -
-    local def_iface=${ifext}
+    local def_iface=${AWG3_IF}
     while true; do
         echo -e "  ${bnc}Интерфейс AmneziaWG. Дефолт ${bmag}${def_iface}${bnc}."
         ask "Имя интерфейса" "$def_iface" AWG3_NEW_IF
@@ -288,10 +288,10 @@ awg3_add_reserv() {
 
 # Читает конфиг AWG 2.0 и резервирует непересекающиеся порт и подсеть.
 awg3_preflight() {
+    local force_create_reserv=${1:-}
     step "Preflight: сосуществование с AWG 2.0"
-    # Повторный запуск не должен менять порт: клиенты уже раздали конфиги
-    # с прежним значением, и смена порта тихо оборвала бы их всех.
-    if [[ -r "$AWG3_RESERVED_ENV" ]]; then
+    # Повторный запуск не должен менять порт: клиенты уже раздали конфиги с прежним значением, и смена порта тихо оборвала бы их всех.
+    if [[ -r "$AWG3_RESERVED_ENV" || "$force_create_reserv" == true ]]; then
         ask_yn "  ${byel}Сохраняем резерв? ${bnc}" "y" save_reserv
         if [[ "$save_reserv" == "yes" ]]; then
             local prev_port prev_subnet
@@ -306,7 +306,6 @@ awg3_preflight() {
             rm -f $AWG3_RESERVED_ENV
             log "Пишем новый конфиг."
             awg3_add_reserv
-
         fi
     fi
     local awg2_port="" awg2_addr="" awg2_net=""
@@ -921,11 +920,22 @@ echo -e ${nc}
     fi
 }
 
-# --> МЕНЮ: Установка вспомогательных утилит <--
+# --> МЕНЮ: Управление AWG 3 <--
+awg3_menu() {
+    declare mItems=("Пересоздать конфиг резерва" "Создание конфигов")
+    declare mActions=("$(awg3_preflight true)" "awg3_run_cli")
+    declare mTitle="Управление AmneziaWG 3"
+    declare mDescr="Описание управления AWG3\n"
+    declare mType="section"
+    show_menu
+}
+
+
+# --> МЕНЮ: Главное меню AWG 3 <--
 awg3_menu() {
     declare mItems=("Управление" "План установки (dry-run)" "Установить" "Самотест" "Обновить" "Удалить AWG3 с сервера")
-    declare mActions=("awg3_run_cli" "awg3_dry_run" "awg3_install" "awg3_self_test" "awg3_update" "awg3_uninstall")
-    declare mTitle="Установка AmneziaWG 3"
+    declare mActions=("awg3_manager_menu" "awg3_dry_run" "awg3_install" "awg3_self_test" "awg3_update" "awg3_uninstall")
+    declare mTitle="Главное меню AmneziaWG 3"
     declare mDescr="Описание установки AWG3\n"
     declare mType="section"
     show_menu
