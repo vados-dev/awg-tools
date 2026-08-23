@@ -146,10 +146,16 @@ class Menu:
         target = paths.CONF_DIR / "reserved.env"
         content = (
             "# Обновлено при создании сервера.\n"
-            f"AWG3_IFACE={iface}\n"
+            f"AWG3_ENDPOINT={endpoint}\n"
             f"AWG3_PORT={port}\n"
+            f"AWG3_IFACE={iface}\n"
             f"AWG3_SUBNET={subnet}\n"
             f"AWG3_ADDRESS={address}\n"
+            f"AWG3_DNS={dns_value}\n"
+            f"AWG3_ALLOWED={allowed_ips}\n"
+            f"AWG3_MTU={mtu_value}\n"
+            f"AWG3_FW_POLICY={paths.FW_POLICY}\n"
+            f"AWG3_FW_SERVICE={paths.FW_SERVICE}\n"
             f"AWG3_FW_ZONE={paths.FW_ZONE}\n"
             f"AWG3_ROUTE_TABLE={paths.ROUTE_TABLE}\n"
         )

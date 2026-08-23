@@ -33,7 +33,7 @@ CLIENTS_DIR = CONF_DIR / "clients"
 RUN_DIR = _env_path("AWG3_RUN_DIR", "/var/run/amneziawg")
 
 # ── Логи и бекапы ───────────────────────────────────────────────────
-LOG_FILE = _env_path("AWG3_LOG_FILE", "/var/log/awg3.log")
+LOG_FILE = _env_path("AWG3_LOG_FILE", "/etc/VPN/helpers/logs/awg3.log")
 BACKUP_DIR = _env_path("AWG3_BACKUP_DIR", str(Path.home() / "awg3_backup"))
 
 # ── Сетевые дефолты, разведённые с AWG 2.0 ──────────────────────────
@@ -69,7 +69,6 @@ def installer_raw_url() -> str:
 
 # Пути AWG 2.0 — только для чтения в preflight, никогда не для записи.
 AWG2_SERVER_CONF = Path("/etc/amnezia/amneziawg/awg0.conf")
-
 
 def socket_path(iface: str) -> Path:
     """UAPI-сокет интерфейса."""
