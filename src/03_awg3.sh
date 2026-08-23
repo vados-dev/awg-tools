@@ -71,6 +71,13 @@ awg3_safe_rm_tree() {
 awg3_add_reserv() {
     print_section "Параметры сервера AmneziaWG 3"
 
+    local existing_subnets=""
+    while IFS= read -r line; do
+        local cidr
+        cidr=$(echo "$line" | awk '{print $4}')
+        [[ -n "$cidr" ]] && existing_subnets="${existing_subnets} ${cidr}"
+    done < <(ip -o addr show | grep "inet " | grep -v "host lo")
+
     local def_endpoint_ip=${ipext}
     while true; do
         echo -e "  ${bnc}IP по которому клиенты подключаются к серверу."
@@ -105,24 +112,13 @@ awg3_add_reserv() {
 
     # - подсеть туннеля -
     local def_subnet=${AWG3_SUBNET}
-    local existing_subnets=""
-
-    while IFS= read -r line; do
-        local cidr
-        cidr=$(echo "$line" | awk '{print $4}')
-        [[ -n "$cidr" ]] && existing_subnets="${existing_subnets} ${cidr}"
-    done < <(ip -o addr show | grep "inet " | grep -v "host lo")
-
     while true; do
         echo ""
-        print_info "Подсети на интерфейсах сервера: ${existing_subnets}"
-        echo -e "  ${byel}Убедись что подсеть не совпадает с домашней сетью клиента"
-        echo -e "  (роутер, гостевой WiFi). Иначе VPN работать не будет."
-        ask "Подсеть туннеля" "$def_subnet" AWG3_NEW_SUBNET
+        log "Подсети на интерфейсах сервера: ${existing_subnets}."
+        log_warn "${byel}Убедись что подсеть не совпадает с домашней сетью клиента (роутер, гостевой WiFi). Иначе VPN работать не будет."
+        ask "Подсеть туннеля: " "$def_subnet" AWG3_NEW_SUBNET
         if ! validate_cidr "$AWG3_NEW_SUBNET"; then log_error "Формат: 10.10.10.0/24"; continue; fi
-
-        local tunnel_base
-        tunnel_base=$(cidr_base "$AWG3_NEW_SUBNET")
+        local tunnel_base=$(cidr_base "$AWG3_NEW_SUBNET")
         # - subnets_overlap() заточен под 10.X.0.0/24, этого достаточно для схемы AWG -
         if subnets_overlap "$tunnel_base" "$existing_subnets"; then
             log_error "Конфликт с подсетью сервера!"
@@ -130,7 +126,6 @@ awg3_add_reserv() {
             continue
         fi
         # - предупреждение о типичных домашних подсетях -
-
         local _home_conflict=false
         for _hs in 192.168.0 192.168.1 192.168.100 10.0.0 10.0.1 10.10.0; do
             if [[ "$tunnel_base" == "$_hs" ]]; then
@@ -148,10 +143,9 @@ awg3_add_reserv() {
         $_home_conflict && continue
         break
     done
-
     local tunnel_base
     tunnel_base=$(cidr_base "$AWG3_NEW_SUBNET")
-    local AWG3_NEW_ADDRESS="${tunnel_base}.1"
+    AWG3_NEW_ADDRESS="${tunnel_base}.1"
     print_ok "Подсеть: ${AWG3_NEW_SUBNET}, IP сервера: ${AWG3_NEW_ADDRESS}"
 
     # - DNS -
@@ -163,8 +157,8 @@ awg3_add_reserv() {
         echo -e "  ${bmag}2${bnc}) Предустановленные: ${def_dns}${nc}"
         echo ""
         while true; do
-            ask_raw "$(printf '  \033[1mВыбор? \033[1;35m[1]\033[1m:\033[0m ')" dns_ch ${def_dns}
-            case "${dns_ch:-1}" in
+            ask_raw "$(printf '  \033[1mВыбор? \033[1;35m[2]\033[1m:\033[0m ')" AWG3_NEW_DNS "$def_dns" -
+            case "${AWG3_NEW_DNS:-2}" in
                 1) AWG3_NEW_DNS="${AWG3_NEW_TUNNEL_IP}"; break ;;
                 2) AWG3_NEW_DNS="${def_dns}"; break ;;
                 *) AWG3_NEW_DNS="${def_dns}"; break ;;
@@ -175,12 +169,11 @@ awg3_add_reserv() {
         echo -e "  ${bmag}2${bnc}) Предустановленные: ${def_dns}${nc}"
         echo ""
         while true; do
-            ask_raw "$(printf '  \033[1mВыбор? \033[1;35m[1]\033[1m:\033[0m ')" dns_ch ${def_dns}
-            case "${dns_ch:-1}" in
+            ask_raw "$(printf '  \033[1mВыбор? \033[1;35m[2]\033[1m:\033[0m ')" AWG3_NEW_DNS "$def_dns" -
+            case "${AWG3_NEW_DNS:-2}" in
                 1) AWG3_NEW_DNS="${AWG3_NEW_TUNNEL_IP}"; break ;;
                 2) AWG3_NEW_DNS="${def_dns}"; break ;;
                 *) AWG3_NEW_DNS="${def_dns}"; break ;;
-#                *) print_warn "1 или 2" ;;
             esac
         done
     else
@@ -199,7 +192,7 @@ awg3_add_reserv() {
     echo -e "  ${bnc}4) Ввести вручную${nc}"
     echo ""
     while true; do
-        ask_raw "$(printf '  \033[1mВыбор? \033[1;35m[1]\033[1m:\033[0m ')" rt_ch "$AWG3_NEW_ALLOWED"
+        ask_raw "$(printf '  \033[1mВыбор? \033[1;35m[1]\033[1m:\033[0m ')" AWG3_NEW_ALLOWED "$def_allowed" -
         case "${rt_ch:-1}" in
             1) AWG3_NEW_ALLOWED="$def_allowed"; break ;;
             2) AWG3_NEW_ALLOWED="$kill_switch"; break ;;
@@ -221,8 +214,8 @@ awg3_add_reserv() {
     echo -e "  ${bnc}5) 1420 - максимальная скорость (чистый Ethernet)"
     echo -e "  ${bnc}6) Ввести вручную"${nc}
     while true; do
-        ask_raw "$(printf '  \033[1mВыбор? \033[1;35m[2]\033[1m:\033[0m ')" mtu_ch "$AWG3_NEW_MTU"
-        case "${mtu_ch:-3}" in
+        ask_raw "$(printf '  \033[1mВыбор? \033[1;35m[3]\033[1m:\033[0m ')" AWG3_NEW_MTU "$def_mtu" -
+        case "${AWG3_NEW_MTU:-3}" in
             1) AWG3_NEW_MTU="1280"; break ;;
             2) AWG3_NEW_MTU="1300"; break ;;
             3) AWG3_NEW_MTU="1320"; break ;;
@@ -242,8 +235,8 @@ awg3_add_reserv() {
     echo -e "  ${bnc}2) Ввести вручную${nc}"
     echo ""
     while true; do
-        ask_raw "$(printf '  \033[1mВыбор? \033[1;35m[1]\033[1m:\033[0m ')" rt_ch "$AWG3_NEW_FW_POLICY"
-        case "${rt_ch:-1}" in
+        ask_raw "$(printf '  \033[1mВыбор? \033[1;35m[1]\033[1m:\033[0m ')" AWG3_NEW_FW_POLICY "$def_fw_policy" -
+        case "${AWG3_NEW_FW_POLICY:-1}" in
             1) AWG3_NEW_FW_POLICY="$def_fw_policy"; break ;;
             2) ask "Имя firewalld policy: " $def_fw_policy AWG3_NEW_FW_POLICY; break ;;
             *) AWG3_NEW_FW_POLICY="$def_fw_policy"; break ;;
@@ -259,8 +252,8 @@ awg3_add_reserv() {
     echo -e "  ${bnc}2) Ввести вручную${nc}"
     echo ""
     while true; do
-        ask_raw "$(printf '  \033[1mВыбор? \033[1;35m[1]\033[1m:\033[0m ')" rt_ch "$AWG3_NEW_FW_SERVICE"
-        case "${rt_ch:-1}" in
+        ask_raw "$(printf '  \033[1mВыбор? \033[1;35m[1]\033[1m:\033[0m ')" AWG3_NEW_FW_SERVICE "$def_fw_service" -
+        case "${AWG3_NEW_FW_SERVICE:-1}" in
             1) AWG3_NEW_FW_SERVICE="$def_fw_service"; break ;;
             2) ask "Имя firewalld service: " $def_fw_service AWG3_NEW_FW_SERVICE; break ;;
             *) AWG3_NEW_FW_SERVICE="$def_fw_service"; break ;;
@@ -276,8 +269,8 @@ awg3_add_reserv() {
     echo -e "  ${bnc}2) Ввести вручную${nc}"
     echo ""
     while true; do
-        ask_raw "$(printf '  \033[1mВыбор? \033[1;35m[1]\033[1m:\033[0m ')" rt_ch "$AWG3_NEW_FW_ZONE"
-        case "${rt_ch:-1}" in
+        ask_raw "$(printf '  \033[1mВыбор? \033[1;35m[1]\033[1m:\033[0m ')" AWG3_NEW_FW_ZONE "$def_fw_zone" -
+        case "${AWG3_NEW_FW_ZONE:-1}" in
             1) AWG3_NEW_FW_ZONE="$def_fw_zone"; break ;;
             2) ask "Имя firewalld zone: " $def_fw_zone AWG3_NEW_FW_ZONE; break ;;
             *) AWG3_NEW_FW_ZONE="$def_fw_zone"; break ;;
@@ -288,11 +281,11 @@ awg3_add_reserv() {
 
 # Читает конфиг AWG 2.0 и резервирует непересекающиеся порт и подсеть.
 awg3_preflight() {
-    local force_create_reserv=${1:-}
+    local force_create_reserv
     step "Preflight: сосуществование с AWG 2.0"
     # Повторный запуск не должен менять порт: клиенты уже раздали конфиги с прежним значением, и смена порта тихо оборвала бы их всех.
-    if [[ -r "$AWG3_RESERVED_ENV" || "$force_create_reserv" == true ]]; then
-        ask_yn "  ${byel}Сохраняем резерв? ${bnc}" "y" save_reserv
+    if [[ -r "$AWG3_RESERVED_ENV" ]]; then
+        ask_yn "  ${byel}Сохраняем резерв? ${bnc}" "n" save_reserv
         if [[ "$save_reserv" == "yes" ]]; then
             local prev_port prev_subnet
             prev_port="$(awk -F= '/^AWG3_PORT=/{print $2}' "$AWG3_RESERVED_ENV")"
@@ -302,11 +295,14 @@ awg3_preflight() {
             log "Сбросить резерв: rm ${AWG3_RESERVED_ENV}."
             return 0
         else
-            print_delete "    Переустановка: удаляю прежний резерв $AWG3_RESERVED_ENV."
-            rm -f $AWG3_RESERVED_ENV
+            print_delete "Переустановка: удаляю прежний резерв $AWG3_RESERVED_ENV."
+            rm -f "$AWG3_RESERVED_ENV" || true
             log "Пишем новый конфиг."
             awg3_add_reserv
         fi
+    else
+        log "Файл резерва переменных окружения $AWG3_RESERVED_ENV не найден. Просто создаём новый."
+        awg3_add_reserv
     fi
     local awg2_port="" awg2_addr="" awg2_net=""
     if [[ -r "$AWG2_CONF" ]]; then
@@ -350,11 +346,11 @@ AWG3_ENDPOINT=${AWG3_ENDPOINT}
 AWG3_PORT=${AWG3_PORT}
 AWG3_IFACE=${AWG3_IF}
 AWG3_SUBNET=${AWG3_SUBNET}/24
-AWG3_ADDRESS=${AWG3_ADDRESS}
+AWG3_ADDRESS=${AWG3_ADDRESS}/24
 AWG3_DNS=${AWG3_DNS}
 AWG3_ALLOWED=${AWG3_ALLOWED}
 AWG3_MTU=${AWG3_MTU}
-AWG3_FW_POLICY=${AWG3_FW_POLISY}
+AWG3_FW_POLICY=${AWG3_FW_POLICY}
 AWG3_FW_SERVICE=${AWG3_FW_SERVICE}
 AWG3_FW_ZONE=${AWG3_FW_ZONE}
 AWG3_ROUTE_TABLE=${AWG3_ROUTE_TABLE}
@@ -921,9 +917,9 @@ echo -e ${nc}
 }
 
 # --> МЕНЮ: Управление AWG 3 <--
-awg3_menu() {
+awg3_manager_menu() {
     declare mItems=("Пересоздать конфиг резерва" "Создание конфигов")
-    declare mActions=("$(awg3_preflight true)" "awg3_run_cli")
+    declare mActions=("awg3_preflight" "awg3_run_cli")
     declare mTitle="Управление AmneziaWG 3"
     declare mDescr="Описание управления AWG3\n"
     declare mType="section"
