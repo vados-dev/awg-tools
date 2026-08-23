@@ -78,7 +78,6 @@ TEMPLATES: tuple[SetupTemplate, ...] = (
         awg3=True,
         dns="10.30.30.33, 8.8.4.4",
         mtu=DEFAULT_MTU.value,
-        description="standard, AWG3, Cloudflare, MTU 1320",
 #        dns=DEFAULT_DNS.value,
 #        mtu=DEFAULT_MTU.value,
     ),
